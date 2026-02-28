@@ -1,0 +1,22 @@
+{
+  "name": "lunchm-bot",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "dev": "bun --watch src/index.ts",
+    "lint": "eslint src/",
+    "format": "prettier --write src/"
+  },
+  "dependencies": {
+    "@grammyjs/conversations": "latest",
+    "grammy": "latest",
+    "zod": "latest"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^7.6.1",
+    "@types/bun": "latest",
+    "jiti": "^2.6.1",
+    "prettier": "^3.8.1"
+  }
+}
