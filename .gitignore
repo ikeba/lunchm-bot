@@ -10,6 +10,9 @@ node_modules/
 # build
 dist/
 
+# data
+data/
+
 # os
 .DS_Store
 .idea

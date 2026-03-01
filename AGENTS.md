@@ -8,6 +8,7 @@ Personal Telegram bot for Lunch Money API v2.
 - **Bot:** grammy v1 + @grammyjs/conversations v2
 - **Validation:** zod v4
 - **Language:** TypeScript
+- **Persistence:** `bun:sqlite` — `data/bot.db` (key-value prefs table)
 
 ## Running
 
@@ -41,15 +42,23 @@ src/
 │   ├── context.ts                # MyContext = Context & ConversationFlavor<Context>
 │   ├── middleware.ts             # authMiddleware — blocks everyone except ALLOWED_USER_ID
 │   ├── keyboards.ts              # confirmKeyboard (Confirm/Cancel)
+│   ├── userState.ts              # getLastUsed / setLastUsed — DB-backed, persists across restarts
 │   ├── handlers/
 │   │   ├── start.ts              # /start, /help
 │   │   ├── listTransactions.ts   # /transactions
 │   │   └── balance.ts            # /balance
 │   └── conversations/
 │       └── addTransaction.ts     # /add — multi-step dialog (grammy conversations)
+├── core/
+│   ├── db.ts                     # bun:sqlite wrapper — getPref / setPref / deletePref
+│   ├── cache.ts                  # in-memory API cache — withCache(key, ttlMs, fetcher)
+│   └── logger.ts                 # logger → console + logs/YYYY-MM-DD.log
 └── utils/
     ├── formatTransaction.ts      # formatTransaction, formatTransactionList
     └── formatAccount.ts          # formatAccount, formatAccountList
+
+data/
+└── bot.db                        # SQLite, gitignored — persisted prefs (last used account/category/currency)
 ```
 
 ## Bot commands
@@ -68,6 +77,8 @@ src/
 - Auth middleware is first in the chain — unauthorized updates are silently ignored
 - grammy conversations v2 manages sessions internally, no standalone `session()` needed
 - All API responses are validated through zod schemas before use
+- Persistent user preferences live in `src/core/db.ts` (SQLite key-value, `data/bot.db`)
+- Any I/O inside a conversation must be wrapped in `conversation.external()` — grammy replays the entire function on each update, so side effects outside `external()` run multiple times
 
 ## Code style
 

@@ -270,13 +270,15 @@ async function saveTransaction(
       })
     )
 
-    setLastUsed({
-      currency: draft.currency,
-      manualAccountId: draft.manualAccountId,
-      accountName: draft.accountName,
-      categoryId: draft.categoryId,
-      categoryName: draft.categoryName,
-    })
+    await conversation.external(() =>
+      setLastUsed({
+        currency: draft.currency,
+        manualAccountId: draft.manualAccountId,
+        accountName: draft.accountName,
+        categoryId: draft.categoryId,
+        categoryName: draft.categoryName,
+      })
+    )
 
     await ctx.api.editMessageText(chatId, msgId, 'Saved ✅', {
       reply_markup: afterSaveKeyboard(created.id),
@@ -326,14 +328,14 @@ export async function addTransaction(
     const amount = Number.parseFloat(raw).toFixed(2)
 
     // Step 2: build draft from defaults
-    const lu = useLastUsed ? getLastUsed() : {}
+    const lastUsed = useLastUsed ? await conversation.external(getLastUsed) : {}
     const draft: TransactionDraft = {
       amount,
-      currency: lu.currency ?? currencies[0] ?? 'usd',
-      manualAccountId: lu.manualAccountId,
-      accountName: lu.accountName,
-      categoryId: lu.categoryId,
-      categoryName: lu.categoryName,
+      currency: lastUsed.currency ?? currencies[0] ?? 'usd',
+      manualAccountId: lastUsed.manualAccountId,
+      accountName: lastUsed.accountName,
+      categoryId: lastUsed.categoryId,
+      categoryName: lastUsed.categoryName,
       date: isoDate(),
       payee: undefined,
       notes: undefined,
