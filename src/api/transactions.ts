@@ -1,7 +1,7 @@
 import { apiClient } from '@/core/httpClient'
 import { isoDate } from '@/utils/date'
-import { NewTransactionSchema, TransactionSchema } from './types'
-import type { NewTransaction, Transaction } from './types'
+import { NewTransactionSchema, TransactionSchema } from './types/types'
+import type { NewTransaction, Transaction } from './types/types'
 
 export async function getTransactions(
   limit = 50,

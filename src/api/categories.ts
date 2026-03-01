@@ -1,7 +1,7 @@
 import { withCache } from '@/core/cache'
 import { apiClient } from '@/core/httpClient'
-import { CategorySchema } from './types'
-import type {Category} from './types';
+import { CategorySchema } from './types/types'
+import type { Category } from './types/types'
 
 export function getCategories(): Promise<Category[]> {
   return withCache('categories', async () => {

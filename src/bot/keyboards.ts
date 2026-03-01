@@ -1,5 +1,5 @@
 import { InlineKeyboard } from 'grammy'
-import type { Account, Category } from '@/api/types'
+import type { Account, Category } from '@/api/types/types'
 
 export function previewKeyboard(): InlineKeyboard {
   return new InlineKeyboard()
@@ -21,7 +21,14 @@ export function afterSaveKeyboard(transactionId: number): InlineKeyboard {
   return new InlineKeyboard()
     .text('Add similar', 'add_similar')
     .text('Add new', 'add_new')
+    .row()
     .text('Undo', `undo:${transactionId}`)
+    .row()
+    .text('← Menu', 'menu:back')
+}
+
+export function backToMenuKeyboard(): InlineKeyboard {
+  return new InlineKeyboard().text('← Menu', 'menu:back')
 }
 
 /** Back button — shown below text prompts (payee, note) */
@@ -80,7 +87,7 @@ export function accountKeyboard(accounts: Account[]): InlineKeyboard {
     kb.row()
   }
 
-  kb.text('Skip', 'account:skip').row().text('↩ Back', 'back')
+  kb.text('↩ Back', 'back')
 
   return kb
 }

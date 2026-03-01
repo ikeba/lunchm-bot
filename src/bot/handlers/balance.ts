@@ -1,20 +1,25 @@
-import type { Bot } from 'grammy'
 import { getAccounts } from '@/api/accounts'
 import { formatAccountList } from '@/utils/formatAccount'
-import type { MyContext } from '@/bot/context'
-import { Command } from '@/bot/commands'
+import type { MyContext } from '@/types/context'
+import { backToMenuKeyboard } from '@/bot/keyboards'
 
 export async function handleBalance(ctx: MyContext): Promise<void> {
-  await ctx.reply('Fetching accounts...')
+  const loadingMsg = await ctx.reply('Fetching accounts...')
+
   try {
     const accounts = await getAccounts()
 
-    await ctx.reply(formatAccountList(accounts), { parse_mode: 'HTML' })
+    await ctx.api
+      .deleteMessage(loadingMsg.chat.id, loadingMsg.message_id)
+      .catch(() => {})
+    await ctx.reply(formatAccountList(accounts), {
+      parse_mode: 'HTML',
+      reply_markup: backToMenuKeyboard(),
+    })
   } catch (e) {
-    await ctx.reply(`Error: ${e}`)
+    await ctx.api
+      .deleteMessage(loadingMsg.chat.id, loadingMsg.message_id)
+      .catch(() => {})
+    await ctx.reply(`Error: ${e}`, { reply_markup: backToMenuKeyboard() })
   }
-}
-
-export function registerBalanceHandler(bot: Bot<MyContext>): void {
-  bot.command(Command.Balance, handleBalance)
 }

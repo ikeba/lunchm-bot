@@ -1,4 +1,4 @@
-import type { Account } from '@/api/types'
+import type { Account } from '@/api/types/types'
 
 export function formatAccount(a: Account): string {
   const balance = a.balance != null ? `${a.balance} ${a.currency}` : 'N/A'

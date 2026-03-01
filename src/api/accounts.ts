@@ -1,7 +1,7 @@
 import { withCache } from '@/core/cache'
 import { apiClient } from '@/core/httpClient'
-import { AccountSchema } from './types'
-import type { Account } from './types'
+import { AccountSchema } from './types/types'
+import type { Account } from './types/types'
 
 export function getAccounts(): Promise<Account[]> {
   return withCache('accounts', async () => {

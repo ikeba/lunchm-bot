@@ -26,50 +26,6 @@ ALLOWED_USER_ID=        # your Telegram ID (from @userinfobot)
 LUNCH_MONEY_BASE_URL=   # optional, default: https://api.lunchmoney.dev/v2
 ```
 
-## Structure
-
-```
-src/
-├── index.ts                      # entry point, wires everything together
-├── config.ts                     # zod validates .env
-├── api/
-│   ├── client.ts                 # base fetch client (headers, baseUrl, get/post/put/delete)
-│   ├── types.ts                  # zod schemas + TypeScript types (Transaction, Account)
-│   ├── transactions.ts           # getTransactions, getTransactionById, createTransaction
-│   ├── accounts.ts               # getAccounts
-│   └── me.ts                     # getMe
-├── bot/
-│   ├── context.ts                # MyContext = Context & ConversationFlavor<Context>
-│   ├── middleware.ts             # authMiddleware — blocks everyone except ALLOWED_USER_ID
-│   ├── keyboards.ts              # confirmKeyboard (Confirm/Cancel)
-│   ├── userState.ts              # getLastUsed / setLastUsed — DB-backed, persists across restarts
-│   ├── handlers/
-│   │   ├── start.ts              # /start, /help
-│   │   ├── listTransactions.ts   # /transactions
-│   │   └── balance.ts            # /balance
-│   └── conversations/
-│       └── addTransaction.ts     # /add — multi-step dialog (grammy conversations)
-├── core/
-│   ├── db.ts                     # bun:sqlite wrapper — getPref / setPref / deletePref
-│   ├── cache.ts                  # in-memory API cache — withCache(key, ttlMs, fetcher)
-│   └── logger.ts                 # logger → console + logs/YYYY-MM-DD.log
-└── utils/
-    ├── formatTransaction.ts      # formatTransaction, formatTransactionList
-    └── formatAccount.ts          # formatAccount, formatAccountList
-
-data/
-└── bot.db                        # SQLite, gitignored — persisted prefs (last used account/category/currency)
-```
-
-## Bot commands
-
-| Command           | Description                                                 |
-|-------------------|-------------------------------------------------------------|
-| `/start`, `/help` | List of commands                                            |
-| `/transactions`   | Last 20 transactions                                        |
-| `/add`            | Add a transaction (dialog: amount → payee → note → confirm) |
-| `/balance`        | Manual account balances                                     |
-
 ## Architecture decisions
 
 - **One file = one responsibility** (SRP)

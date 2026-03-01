@@ -1,7 +1,7 @@
 import type { MiddlewareFn } from 'grammy'
 import { config } from '@/config'
 import { logger } from '@/core/logger'
-import type { MyContext } from './context'
+import type { MyContext } from '../types/context'
 
 export const authMiddleware: MiddlewareFn<MyContext> = (ctx, next) => {
   if (ctx.from?.id !== config.ALLOWED_USER_ID) {

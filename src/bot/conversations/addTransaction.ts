@@ -3,8 +3,8 @@ import { getAccounts } from '@/api/accounts'
 import { getCategories } from '@/api/categories'
 import { getCurrencies } from '@/api/currencies'
 import { createTransaction, deleteTransaction } from '@/api/transactions'
-import type { Account, Category } from '@/api/types'
-import type { MyContext } from '@/bot/context'
+import type { Account, Category } from '@/api/types/types'
+import type { MyContext } from '@/types/context'
 import {
   accountKeyboard,
   afterSaveKeyboard,
@@ -14,6 +14,7 @@ import {
   datePicker,
   previewKeyboard,
 } from '@/bot/keyboards'
+import { MENU_KEYBOARD, MENU_TEXT } from '@/bot/handlers/menu'
 import { getLastUsed, setLastUsed } from '@/bot/userState'
 import { logger } from '@/core/logger'
 import { isoDate } from '@/utils/date'
@@ -311,15 +312,22 @@ export async function addTransaction(
   const chatId = ctx.chat!.id
   let useLastUsed = true
 
+  const del = (...ids: number[]) =>
+    Promise.all(
+      ids.map(id => ctx.api.deleteMessage(chatId, id).catch(() => {}))
+    )
+
   // Outer loop — repeats for "Add similar" / "Add new"
   while (true) {
     // Step 1: ask for amount
-    await ctx.reply('Enter amount (e.g. 12.50):')
+    const amountPromptMsg = await ctx.reply('Enter amount (e.g. 12.50):')
 
     const amountCtx = await conversation.waitFor('message:text')
     const raw = amountCtx.message.text.trim().replace(',', '.')
+    const amountMsgId = amountCtx.message.message_id
 
     if (Number.isNaN(Number.parseFloat(raw))) {
+      await del(amountPromptMsg.message_id, amountMsgId)
       await ctx.reply('Invalid amount. Start over with /add')
 
       return
@@ -341,12 +349,14 @@ export async function addTransaction(
       notes: undefined,
     }
 
-    // Step 3: show preview card
+    // Step 3: show preview card, then clean up prompt + user message
     const previewMsg = await ctx.reply(renderPreview(draft), {
       parse_mode: 'HTML',
       reply_markup: previewKeyboard(),
     })
     const msgId = previewMsg.message_id
+
+    await del(amountPromptMsg.message_id, amountMsgId)
 
     // Step 4: edit loop
     let confirmed = false
@@ -363,7 +373,10 @@ export async function addTransaction(
           break
 
         case 'cancel':
-          await ctx.api.deleteMessage(chatId, msgId)
+          await ctx.api.editMessageText(chatId, msgId, MENU_TEXT, {
+            parse_mode: 'HTML',
+            reply_markup: MENU_KEYBOARD,
+          })
 
           return
 
@@ -445,7 +458,6 @@ export async function addTransaction(
     if (postAction === `undo:${createdId}`) {
       try {
         await conversation.external(() => deleteTransaction(createdId))
-        await ctx.api.editMessageText(chatId, msgId, 'Undone.')
       } catch (e) {
         logger.error('[addTransaction] deleteTransaction failed', e)
         await ctx.api.editMessageText(
@@ -453,10 +465,25 @@ export async function addTransaction(
           msgId,
           `Saved ✅\n\n❌ Undo failed: ${e instanceof Error ? e.message : String(e)}`
         )
+
+        return
       }
+
+      await del(msgId)
 
       return
     }
+
+    if (postAction === 'menu:back') {
+      await ctx.api.editMessageText(chatId, msgId, MENU_TEXT, {
+        parse_mode: 'HTML',
+        reply_markup: MENU_KEYBOARD,
+      })
+
+      return
+    }
+
+    await del(msgId)
 
     if (postAction === 'add_similar') {
       useLastUsed = true

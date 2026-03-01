@@ -1,4 +1,4 @@
-import type { Transaction } from '@/api/types'
+import type { Transaction } from '@/api/types/types'
 
 export function formatTransaction(t: Transaction): string {
   const sign = t.is_income ? '+' : '-'
@@ -9,8 +9,9 @@ export function formatTransaction(t: Transaction): string {
 }
 
 export function formatTransactionList(transactions: Transaction[]): string {
-  if (transactions.length === 0)
-{ return 'No transactions found.' }
+  if (transactions.length === 0) {
+    return 'No transactions found.'
+  }
 
   return transactions.map(formatTransaction).join('\n')
 }
