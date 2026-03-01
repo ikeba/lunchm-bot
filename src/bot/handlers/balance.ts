@@ -9,7 +9,7 @@ export async function handleBalance(ctx: MyContext): Promise<void> {
   try {
     const accounts = await getAccounts()
 
-    await ctx.reply(formatAccountList(accounts))
+    await ctx.reply(formatAccountList(accounts), { parse_mode: 'HTML' })
   } catch (e) {
     await ctx.reply(`Error: ${e}`)
   }

@@ -1,7 +1,7 @@
 import { withCache } from '@/core/cache'
 import { apiClient } from '@/core/httpClient'
 import { AccountSchema } from './types'
-import type {Account} from './types';
+import type { Account } from './types'
 
 export function getAccounts(): Promise<Account[]> {
   return withCache('accounts', async () => {
@@ -9,6 +9,10 @@ export function getAccounts(): Promise<Account[]> {
       '/manual_accounts'
     )
 
-    return (data.manual_accounts ?? []).map(a => AccountSchema.parse(a))
+    return (data.manual_accounts ?? [])
+      .map(a => AccountSchema.parse(a))
+      .filter(
+        a => a.status !== 'closed' && Number.parseFloat(a.balance ?? '0') !== 0
+      )
   })
 }

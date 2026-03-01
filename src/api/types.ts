@@ -41,11 +41,18 @@ export type Category = z.infer<typeof CategorySchema>
 export const AccountSchema = z.object({
   id: z.number(),
   name: z.string(),
-  balance: z.string().nullable().optional(),
-  currency: z.string().nullable().optional(),
+  institution_name: z.string().nullable(),
+  display_name: z.string().nullable().optional(),
   type: z.string().nullable().optional(),
-  institution_name: z.string().nullable().optional(),
-  closed: z.boolean().default(false),
+  subtype: z.string().nullable().optional(),
+  balance: z.string(),
+  currency: z.string(),
+  to_base: z.number(),
+  balance_as_of: z.string(),
+  status: z.enum(['active', 'closed']),
+  closed_on: z.string().nullable().optional(),
+  external_id: z.string().nullable().optional(),
+  exclude_from_transactions: z.boolean().default(false),
 })
 
 export type Account = z.infer<typeof AccountSchema>
