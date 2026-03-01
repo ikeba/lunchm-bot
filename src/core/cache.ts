@@ -1,4 +1,5 @@
-const TTL_1H = 60 * 60 * 1000
+export const TTL_1H = 60 * 60 * 1000
+export const TTL_1D = TTL_1H * 24
 
 interface CacheEntry<T> {
   data: T

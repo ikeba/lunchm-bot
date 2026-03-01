@@ -47,8 +47,9 @@ function format(level: Level, message: string, extra?: unknown): string {
 
 export const logger = {
   info(message: string, extra?: unknown): void {
-    if (!shouldLog('info'))
-{ return }
+    if (!shouldLog('info')) {
+      return
+    }
 
     const line = format('info', message, extra)
 
@@ -57,8 +58,9 @@ export const logger = {
   },
 
   warn(message: string, extra?: unknown): void {
-    if (!shouldLog('warn'))
-{ return }
+    if (!shouldLog('warn')) {
+      return
+    }
 
     const line = format('warn', message, extra)
 

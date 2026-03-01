@@ -1,51 +1,62 @@
 import { InlineKeyboard } from 'grammy'
-import type { Account, Category } from '@/api/types/types'
+import type { Account } from '@/api/types/types'
+import {
+  AccountCallback,
+  CommonCallback,
+  CurrencyCallback,
+  DateCallback,
+  MenuCallback,
+  PostSaveCallback,
+  PreviewCallback,
+} from '@/bot/constants/callbacks'
+
+export { categoryKeyboard, CATEGORY_PAGE_SIZE } from '@/bot/keyboards/category'
 
 export function previewKeyboard(): InlineKeyboard {
   return new InlineKeyboard()
-    .text('✅ Confirm', 'confirm')
+    .text('✅ Confirm', PreviewCallback.CONFIRM)
     .row()
-    .text('🏦 Edit Account', 'edit:account')
-    .text('🏷 Edit Category', 'edit:category')
+    .text('🏦 Edit Account', PreviewCallback.EDIT_ACCOUNT)
+    .text('🏷 Edit Category', PreviewCallback.EDIT_CATEGORY)
     .row()
-    .text('📅 Edit Date', 'edit:date')
-    .text('💱 Edit Currency', 'edit:currency')
+    .text('📅 Edit Date', PreviewCallback.EDIT_DATE)
+    .text('💱 Edit Currency', PreviewCallback.EDIT_CURRENCY)
     .row()
-    .text('👤 Edit Payee', 'edit:payee')
-    .text('📝 Edit Note', 'edit:note')
+    .text('👤 Edit Payee', PreviewCallback.EDIT_PAYEE)
+    .text('📝 Edit Note', PreviewCallback.EDIT_NOTE)
     .row()
-    .text('❌ Cancel', 'cancel')
+    .text('❌ Cancel', PreviewCallback.CANCEL)
 }
 
 export function afterSaveKeyboard(transactionId: number): InlineKeyboard {
   return new InlineKeyboard()
-    .text('Add similar', 'add_similar')
-    .text('Add new', 'add_new')
+    .text('Add similar', PostSaveCallback.ADD_SIMILAR)
+    .text('Add new', PostSaveCallback.ADD_NEW)
     .row()
-    .text('Undo', `undo:${transactionId}`)
+    .text('Undo', `${PostSaveCallback.UNDO_PREFIX}${transactionId}`)
     .row()
-    .text('← Menu', 'menu:back')
+    .text('← Menu', MenuCallback.BACK)
 }
 
 export function backToMenuKeyboard(): InlineKeyboard {
-  return new InlineKeyboard().text('← Menu', 'menu:back')
+  return new InlineKeyboard().text('← Menu', MenuCallback.BACK)
 }
 
 /** Back button — shown below text prompts (payee, note) */
 export function backKeyboard(): InlineKeyboard {
-  return new InlineKeyboard().text('↩ Back', 'back')
+  return new InlineKeyboard().text('↩ Back', CommonCallback.BACK)
 }
 
 /** Date quick-pick */
 export function datePicker(): InlineKeyboard {
   return new InlineKeyboard()
-    .text('Yesterday', 'date:yesterday')
-    .text('Today', 'date:today')
-    .text('Tomorrow', 'date:tomorrow')
+    .text('Yesterday', DateCallback.YESTERDAY)
+    .text('Today', DateCallback.TODAY)
+    .text('Tomorrow', DateCallback.TOMORROW)
     .row()
-    .text('✏️ Enter manually', 'date:manual')
+    .text('✏️ Enter manually', DateCallback.MANUAL)
     .row()
-    .text('↩ Back', 'back')
+    .text('↩ Back', CommonCallback.BACK)
 }
 
 export function currencyKeyboard(
@@ -59,7 +70,7 @@ export function currencyKeyboard(
       c.toUpperCase() === selected.toUpperCase()
         ? `${c.toUpperCase()} ✓`
         : c.toUpperCase(),
-      `currency:${c}`
+      `${CurrencyCallback.PREFIX}${c}`
     )
     if (i % 3 === 2) {
       kb.row()
@@ -69,7 +80,7 @@ export function currencyKeyboard(
     kb.row()
   }
 
-  kb.text('↩ Back', 'back')
+  kb.text('↩ Back', CommonCallback.BACK)
 
   return kb
 }
@@ -78,7 +89,7 @@ export function accountKeyboard(accounts: Account[]): InlineKeyboard {
   const kb = new InlineKeyboard()
 
   accounts.forEach((acc, i) => {
-    kb.text(acc.name, `account:${acc.id}`)
+    kb.text(acc.name, `${AccountCallback.PREFIX}${acc.id}`)
     if (i % 2 === 1) {
       kb.row()
     }
@@ -87,25 +98,7 @@ export function accountKeyboard(accounts: Account[]): InlineKeyboard {
     kb.row()
   }
 
-  kb.text('↩ Back', 'back')
-
-  return kb
-}
-
-export function categoryKeyboard(categories: Category[]): InlineKeyboard {
-  const kb = new InlineKeyboard()
-
-  categories.forEach((cat, i) => {
-    kb.text(cat.name, `category:${cat.id}`)
-    if (i % 3 === 2) {
-      kb.row()
-    }
-  })
-  if (categories.length % 3 !== 0) {
-    kb.row()
-  }
-
-  kb.text('Skip', 'category:skip').row().text('↩ Back', 'back')
+  kb.text('↩ Back', CommonCallback.BACK)
 
   return kb
 }

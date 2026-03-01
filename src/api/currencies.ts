@@ -8,8 +8,9 @@ export function getCurrencies(): Promise<string[]> {
     const seen = new Set<string>([me.primary_currency])
 
     for (const account of accounts) {
-      if (account.currency)
-{ seen.add(account.currency) }
+      if (account.currency) {
+        seen.add(account.currency)
+      }
     }
 
     return [...seen]

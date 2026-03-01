@@ -58,4 +58,7 @@ LUNCH_MONEY_BASE_URL=   # optional, default: https://api.lunchmoney.dev/v2
     doSomething()
   }
   ```
-
+- always try to use declarative, not imperative code
+- NEVER use single line vars, e.g. not 'c', 'cat' - better 'category'
+- avoid spagetti code with nested if-s
+- avoid inline strings like 'category:skip', better create 'const {} as const' and use them
