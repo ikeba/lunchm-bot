@@ -7,11 +7,15 @@ import { addTransaction } from './bot/conversations/addTransaction'
 import { registerBalanceHandler } from './bot/handlers/balance'
 import { registerListTransactionsHandler } from './bot/handlers/listTransactions'
 import { registerStartHandlers } from './bot/handlers/start'
-import { authMiddleware } from './bot/middleware'
+import { authMiddleware, skipOldUpdatesMiddleware } from './bot/middleware'
+import { Command } from './bot/commands'
 import { config } from './config'
 import { logger } from './core/logger'
 
 const bot = new Bot<MyContext>(config.TELEGRAM_BOT_TOKEN)
+
+// Skip backlog of updates that arrived while the bot was offline
+bot.use(skipOldUpdatesMiddleware)
 
 // Auth — must be first
 bot.use(authMiddleware)
@@ -35,7 +39,7 @@ registerListTransactionsHandler(bot)
 registerBalanceHandler(bot)
 
 // /add — enters the conversation
-bot.command('add', ctx => ctx.conversation.enter('addTransaction'))
+bot.command(Command.Add, ctx => ctx.conversation.enter('addTransaction'))
 
 bot.catch(err => {
   logger.error('[bot] Unhandled error', {
@@ -50,10 +54,10 @@ bot.start({
 
     await bot.api
       .setMyCommands([
-        { command: 'add', description: 'Add a new transaction' },
-        { command: 'transactions', description: 'Last 50 transactions' },
-        { command: 'balance', description: 'Account balances' },
-        { command: 'm', description: 'Show menu' },
+        { command: Command.Add, description: 'Add a new transaction' },
+        { command: Command.Transactions, description: 'Last 50 transactions' },
+        { command: Command.Balance, description: 'Account balances' },
+        { command: Command.Menu, description: 'Show menu' },
       ])
       .catch(e => logger.warn('[startup] setMyCommands failed', e))
 

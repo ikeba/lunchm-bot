@@ -1,23 +1,26 @@
 import { InlineKeyboard } from 'grammy'
-import type {Bot} from 'grammy';
+import type { Bot } from 'grammy'
+import { Command } from '@/bot/commands'
 import type { MyContext } from '@/bot/context'
 import { handleBalance } from './balance'
 import { handleListTransactions } from './listTransactions'
 
-const HELP_TEXT = `<b>Lunch Money Bot 💰</b>
+const CallbackAction = {
+  MenuAdd: 'menu:add',
+  MenuTransactions: 'menu:transactions',
+  MenuBalance: 'menu:balance',
+} as const
 
-/add — add a new transaction
-/transactions — last 50 transactions
-/balance — account balances`
+const HELP_TEXT = `<b>Lunch Money Bot 💰</b>`
 
 const MENU_KEYBOARD = new InlineKeyboard()
-  .text('➕ Add transaction', 'menu:add')
+  .text('➕ Add transaction', CallbackAction.MenuAdd)
   .row()
-  .text('📋 Transactions', 'menu:txns')
-  .text('💰 Balance', 'menu:balance')
+  .text('📋 Transactions', CallbackAction.MenuTransactions)
+  .text('💰 Balance', CallbackAction.MenuBalance)
 
 export function registerStartHandlers(bot: Bot<MyContext>): void {
-  bot.command(['start', 'help'], async ctx => {
+  bot.command([Command.Menu, 'start', 'help'], async ctx => {
     // Ensure the menu button is visible in this chat
     await ctx.api
       .setChatMenuButton({
@@ -31,17 +34,17 @@ export function registerStartHandlers(bot: Bot<MyContext>): void {
     })
   })
 
-  bot.callbackQuery('menu:add', async ctx => {
+  bot.callbackQuery(CallbackAction.MenuAdd, async ctx => {
     await ctx.answerCallbackQuery()
     await ctx.conversation.enter('addTransaction')
   })
 
-  bot.callbackQuery('menu:txns', async ctx => {
+  bot.callbackQuery(CallbackAction.MenuTransactions, async ctx => {
     await ctx.answerCallbackQuery()
     await handleListTransactions(ctx)
   })
 
-  bot.callbackQuery('menu:balance', async ctx => {
+  bot.callbackQuery(CallbackAction.MenuBalance, async ctx => {
     await ctx.answerCallbackQuery()
     await handleBalance(ctx)
   })

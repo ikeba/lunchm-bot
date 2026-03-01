@@ -2,6 +2,7 @@ import type { Bot } from 'grammy'
 import { getAccounts } from '@/api/accounts'
 import { formatAccountList } from '@/utils/formatAccount'
 import type { MyContext } from '@/bot/context'
+import { Command } from '@/bot/commands'
 
 export async function handleBalance(ctx: MyContext): Promise<void> {
   await ctx.reply('Fetching accounts...')
@@ -15,5 +16,5 @@ export async function handleBalance(ctx: MyContext): Promise<void> {
 }
 
 export function registerBalanceHandler(bot: Bot<MyContext>): void {
-  bot.command('balance', handleBalance)
+  bot.command(Command.Balance, handleBalance)
 }
