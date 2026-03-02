@@ -30,9 +30,6 @@ export function previewKeyboard(): InlineKeyboard {
 
 export function afterSaveKeyboard(transactionId: number): InlineKeyboard {
   return new InlineKeyboard()
-    .text('Add similar', PostSaveCallback.ADD_SIMILAR)
-    .text('Add new', PostSaveCallback.ADD_NEW)
-    .row()
     .text('Undo', `${PostSaveCallback.UNDO_PREFIX}${transactionId}`)
     .row()
     .text('← Menu', MenuCallback.BACK)

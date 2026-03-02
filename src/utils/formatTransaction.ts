@@ -40,7 +40,7 @@ function formatDayGroup(date: string, transactions: Transaction[]): string {
   const maxAmountLen = Math.max(...amountColumns.map(s => s.length))
   const maxPayeeLen = Math.max(...payeeColumns.map(s => s.length))
 
-  const header = `${'<b>Amount</b>'.padStart(maxAmountLen)} | ${'<b>Payee</b>'.padEnd(maxPayeeLen)}`
+  const header = `<b>${'Amount'.padStart(maxAmountLen)}</b> | <b>${'Payee'.padEnd(maxPayeeLen)}</b>`
 
   const rows = transactions.map((_, i) => {
     const amount = amountColumns[i].padStart(maxAmountLen)

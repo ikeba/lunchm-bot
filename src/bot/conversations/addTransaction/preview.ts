@@ -2,8 +2,11 @@ import type { FlowContext, TransactionDraft } from './flowContext'
 import { previewKeyboard } from '@/bot/keyboards'
 
 export function renderPreview(draft: TransactionDraft): string {
+  // Zero-width spaces pad the line to force a wide Telegram bubble,
+  // preventing inline keyboard button labels from being truncated.
+  const spacer = '\u200B'.repeat(40)
   const lines = [
-    '<b>New transaction</b>',
+    `<b>New transaction</b>${spacer}`,
     '',
     `💰 Amount: <b>${draft.amount} ${draft.currency.toUpperCase()}</b>`,
     `🏦 Account: ${draft.accountName ?? '—'}`,
