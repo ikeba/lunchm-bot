@@ -1,6 +1,6 @@
 {
   "name": "lunchm-bot",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "scripts": {
     "start": "bun run src/index.ts",
@@ -19,4 +19,4 @@
     "jiti": "^2.6.1",
     "prettier": "^3.8.1"
   }
-}
+} 

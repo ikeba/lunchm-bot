@@ -3,6 +3,7 @@ import type { Bot } from 'grammy'
 import type { MyContext } from '@/types/context'
 import { handleBalance } from './balance'
 import { handleListTransactions } from './listTransactions'
+import { version } from '../../../package.json'
 
 const Actions = {
   AddTransaction: 'menu:add-transaction',
@@ -10,7 +11,7 @@ const Actions = {
   AccountsList: 'menu:accounts-list',
 } as const
 
-export const MENU_TEXT = `<b>Lunch Money Bot 💰</b>`
+export const MENU_TEXT = `<b>Lunch Money Bot 💰</b>  <code>v${version}</code>`
 export const MENU_KEYBOARD = new InlineKeyboard()
   .text('➕ Add transaction', Actions.AddTransaction)
   .row()
