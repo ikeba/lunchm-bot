@@ -57,3 +57,4 @@ The bot is gated by `ALLOWED_USER_ID` via auth middleware, so all handlers assum
 - No abbreviated variable names (use `category`, not `cat` or `c`).
 - Avoid nested `if` chains — flatten logic.
 - All callback data strings live in `src/bot/constants/callbacks.ts` as `const` objects — never inline string literals for callbacks.
+- Respect empty-line rule and existing empty lines.

@@ -1,5 +1,5 @@
 import { apiClient } from '@/core/httpClient'
-import { withCache, TTL_1D } from '@/core/cache'
+import { withCache, TTL_1D, TTL_5MIN } from '@/core/cache'
 import { isoDate } from '@/utils/date'
 import { NewTransactionSchema, TransactionSchema } from './types/types'
 import type { NewTransaction, Transaction } from './types/types'
@@ -81,5 +81,13 @@ export async function getCategoryFrequency(): Promise<
       }))
     },
     TTL_1D
+  )
+}
+
+export function getRecentTransactions(): Promise<Transaction[]> {
+  return withCache(
+    'recent_transactions',
+    () => getTransactions(500, 3),
+    TTL_5MIN
   )
 }

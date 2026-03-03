@@ -3,6 +3,7 @@ import type { Bot } from 'grammy'
 import type { MyContext } from '@/types/context'
 import { handleBalance } from './balance'
 import { handleListTransactions } from './listTransactions'
+import { backgroundRefresh } from '@/core/backgroundRefresh'
 import { version } from '../../../package.json'
 
 const Actions = {
@@ -28,6 +29,7 @@ export function registerMenu(bot: Bot<MyContext>): void {
     })
 
     await ctx.deleteMessage().catch(() => {})
+    backgroundRefresh()
   })
 }
 

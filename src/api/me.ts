@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { withCache } from '@/core/cache'
+import { withCache, TTL_1W } from '@/core/cache'
 import { apiClient } from '@/core/httpClient'
 
 const MeSchema = z.object({
@@ -12,9 +12,13 @@ const MeSchema = z.object({
 export type Me = z.infer<typeof MeSchema>
 
 export function getMe(): Promise<Me> {
-  return withCache('me', async () => {
-    const data = await apiClient.get<unknown>('/me')
+  return withCache(
+    'me',
+    async () => {
+      const data = await apiClient.get<unknown>('/me')
 
-    return MeSchema.parse(data)
-  })
+      return MeSchema.parse(data)
+    },
+    TTL_1W
+  )
 }

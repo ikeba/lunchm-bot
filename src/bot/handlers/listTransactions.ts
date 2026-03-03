@@ -1,16 +1,13 @@
-import { getTransactions } from '@/api/transactions'
+import { getRecentTransactions } from '@/api/transactions'
 import { formatTransactionList } from '@/utils/formatTransaction'
 import type { MyContext } from '@/types/context'
 import { backToMenuKeyboard } from '@/bot/keyboards'
-
-const RECENT_DAYS = 3
-const TRANSACTIONS_LIMIT = 500
 
 export async function handleListTransactions(ctx: MyContext): Promise<void> {
   const loadingMsg = await ctx.reply('Fetching recent transactions...')
 
   try {
-    const transactions = await getTransactions(TRANSACTIONS_LIMIT, RECENT_DAYS)
+    const transactions = await getRecentTransactions()
 
     await ctx.api
       .deleteMessage(loadingMsg.chat.id, loadingMsg.message_id)
