@@ -26,7 +26,9 @@ The bot is gated by `ALLOWED_USER_ID` via auth middleware, so all handlers assum
 |---|---|---|
 | HTTP client | `src/core/httpClient.ts` | Single `apiClient` for all Lunch Money requests (auth + logging) |
 | API modules | `src/api/*.ts` | One file per resource; each validates response with zod |
-| Core services | `src/core/` | `db.ts` (SQLite prefs), `cache.ts` (in-memory TTL), `logger.ts` |
+| API types | `src/api/types/types.ts` | Shared zod schemas, domain types, and response types derived from OpenAPI spec |
+| API helpers | `src/api/helpers.ts` | `buildPath()` — builds URL with query params, omitting undefined values |
+| Core services | `src/core/` | `db.ts` (SQLite prefs), `cache.ts` (SQLite-backed TTL), `logger.ts` |
 | Bot handlers | `src/bot/handlers/` | Simple command/callback handlers (balance, list, menu) |
 | Conversation | `src/bot/conversations/addTransaction/` | Multi-step add-transaction flow |
 | Keyboards | `src/bot/keyboards/` | Inline keyboard builders; shared paged utility in `helpers/paged.ts` |
@@ -44,7 +46,7 @@ The bot is gated by `ALLOWED_USER_ID` via auth middleware, so all handlers assum
 
 **State persistence:** `src/core/db.ts` exposes a simple key-value `prefs` table in `data/bot.db`. User preferences (last-used currency, account, category) are read/written via `src/bot/userState.ts`.
 
-**Cache:** `src/core/cache.ts` provides `withCache(key, fetcher, ttlMs)`. Backed by SQLite (`cache` table in `data/bot.db`) — persists across restarts. To bust a cache entry: `sqlite3 data/bot.db "DELETE FROM cache WHERE key = '<key>';"`. Currencies and categories are warmed at startup.
+**Cache:** `src/core/cache.ts` provides `withCache(key, fetcher, { ttl })`. Backed by SQLite (`cache` table in `data/bot.db`) — persists across restarts. To bust a cache entry: `sqlite3 data/bot.db "DELETE FROM cache WHERE key = '<key>';"`. Currencies and categories are warmed at startup.
 
 **Path aliases:** `@/*` maps to `./src/*` (configured in `tsconfig.json`).
 

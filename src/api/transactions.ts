@@ -2,12 +2,51 @@ import { apiClient } from '@/core/httpClient'
 import { withCache, TTL_1D, TTL_5MIN, CACHE_KEYS } from '@/core/cache'
 import { isoDate, monthStart, monthEnd } from '@/utils/date'
 import { NewTransactionSchema, TransactionSchema } from './types/types'
-import type { NewTransaction, Transaction } from './types/types'
+import type {
+  NewTransaction,
+  Transaction,
+  CategoryFrequencyEntry,
+  CategorySpending,
+  TransactionsApiResponse,
+} from './types/types'
+import { buildPath } from './helpers'
 
-export interface CategoryFrequencyEntry {
-  categoryId: number
-  count: number
-  lastDate: string
+export type { CategoryFrequencyEntry, CategorySpending }
+
+function sumByCategory(txs: unknown[], categoryId: number): number {
+  return txs
+    .map(t => TransactionSchema.parse(t))
+    .filter(t => t.category_id === categoryId && !t.is_income)
+    .reduce((sum, t) => sum + t.to_base, 0)
+}
+
+function buildFrequencyEntries(txs: unknown[]): CategoryFrequencyEntry[] {
+  const byCategory = txs
+    .map(transaction => TransactionSchema.parse(transaction))
+    .filter(
+      (transaction): transaction is Transaction & { category_id: number } =>
+        transaction.category_id != null
+    )
+    .reduce<Record<number, { count: number; lastDate: string }>>(
+      (acc, transaction) => {
+        const existing = acc[transaction.category_id]
+
+        acc[transaction.category_id] = {
+          count: (existing?.count ?? 0) + 1,
+          lastDate: existing
+            ? [existing.lastDate, transaction.date].sort().at(-1)!
+            : transaction.date,
+        }
+
+        return acc
+      },
+      {}
+    )
+
+  return Object.entries(byCategory).map(([categoryId, entry]) => ({
+    categoryId: Number(categoryId),
+    ...entry,
+  }))
 }
 
 export async function getTransactions(
@@ -17,8 +56,8 @@ export async function getTransactions(
   const start = isoDate(-days)
   const end = isoDate(1) // +1 day to cover ahead-of-UTC timezones
   // Fetch all transactions in range (API limit >> desired limit), then sort and slice
-  const data = await apiClient.get<{ transactions: unknown[] }>(
-    `/transactions?limit=1000&start_date=${start}&end_date=${end}`
+  const data = await apiClient.get<TransactionsApiResponse>(
+    buildPath('/transactions', { limit: 1000, start_date: start, end_date: end })
   )
 
   return (data.transactions ?? [])
@@ -49,36 +88,15 @@ export async function getCategoryFrequency(): Promise<
   return withCache(
     CACHE_KEYS.CATEGORY_FREQUENCY,
     async () => {
-      const data = await apiClient.get<{ transactions: unknown[] }>(
-        `/transactions?limit=500&start_date=${isoDate(-90)}&end_date=${isoDate(1)}`
+      const data = await apiClient.get<TransactionsApiResponse>(
+        buildPath('/transactions', {
+          limit: 500,
+          start_date: isoDate(-90),
+          end_date: isoDate(1),
+        })
       )
 
-      const byCategory = (data.transactions ?? [])
-        .map(transaction => TransactionSchema.parse(transaction))
-        .filter(
-          (transaction): transaction is Transaction & { category_id: number } =>
-            transaction.category_id != null
-        )
-        .reduce<Record<number, { count: number; lastDate: string }>>(
-          (acc, transaction) => {
-            const existing = acc[transaction.category_id]
-
-            acc[transaction.category_id] = {
-              count: (existing?.count ?? 0) + 1,
-              lastDate: existing
-                ? [existing.lastDate, transaction.date].sort().at(-1)!
-                : transaction.date,
-            }
-
-            return acc
-          },
-          {}
-        )
-
-      return Object.entries(byCategory).map(([categoryId, entry]) => ({
-        categoryId: Number(categoryId),
-        ...entry,
-      }))
+      return buildFrequencyEntries(data.transactions ?? [])
     },
     { ttl: TTL_1D }
   )
@@ -92,11 +110,6 @@ export function getRecentTransactions(): Promise<Transaction[]> {
       ttl: TTL_5MIN,
     }
   )
-}
-
-export interface CategorySpending {
-  thisMonth: number
-  lastMonth: number
 }
 
 export async function getCategoryMonthlySpending(
@@ -113,28 +126,28 @@ export async function getCategoryMonthlySpending(
 
   const lastMonthKey = `${CACHE_KEYS.CATEGORY_SPENDING_PREFIX}:${lastYear}-${String(lastMonthNum).padStart(2, '0')}:${categoryId}`
 
-  const sumCategory = (raw: unknown[]): number =>
-    raw
-      .map(t => TransactionSchema.parse(t))
-      .filter(t => t.category_id === categoryId && !t.is_income)
-      .reduce((sum, t) => sum + t.to_base, 0)
-
   const [thisMonthTotal, lastMonth] = await Promise.all([
     apiClient
-      .get<{
-        transactions: unknown[]
-      }>(
-        `/transactions?limit=1000&start_date=${monthStart(thisYear, thisMonth)}&end_date=${isoDate(1)}`
+      .get<TransactionsApiResponse>(
+        buildPath('/transactions', {
+          limit: 1000,
+          start_date: monthStart(thisYear, thisMonth),
+          end_date: isoDate(1),
+        })
       )
-      .then(data => sumCategory(data.transactions ?? [])),
+      .then(data => sumByCategory(data.transactions ?? [], categoryId)),
     withCache(
       lastMonthKey,
       async () => {
-        const data = await apiClient.get<{ transactions: unknown[] }>(
-          `/transactions?limit=1000&start_date=${monthStart(lastYear, lastMonthNum)}&end_date=${monthEnd(lastYear, lastMonthNum)}`
+        const data = await apiClient.get<TransactionsApiResponse>(
+          buildPath('/transactions', {
+            limit: 1000,
+            start_date: monthStart(lastYear, lastMonthNum),
+            end_date: monthEnd(lastYear, lastMonthNum),
+          })
         )
 
-        return sumCategory(data.transactions ?? [])
+        return sumByCategory(data.transactions ?? [], categoryId)
       },
       { ttl: TTL_1D }
     ),

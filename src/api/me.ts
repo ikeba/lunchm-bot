@@ -1,21 +1,15 @@
-import { z } from 'zod'
 import { withCache, TTL_1W, CACHE_KEYS } from '@/core/cache'
 import { apiClient } from '@/core/httpClient'
+import { MeSchema } from './types/types'
+import type { Me, MeApiResponse } from './types/types'
 
-const MeSchema = z.object({
-  id: z.number(),
-  name: z.string(),
-  email: z.string(),
-  primary_currency: z.string(),
-})
-
-export type Me = z.infer<typeof MeSchema>
+export type { Me }
 
 export function getMe(): Promise<Me> {
   return withCache(
     CACHE_KEYS.ME,
     async () => {
-      const data = await apiClient.get<unknown>('/me')
+      const data = await apiClient.get<MeApiResponse>('/me')
 
       return MeSchema.parse(data)
     },

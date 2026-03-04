@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import type { operations } from './lunchMoneyApiTypes'
 
 export const TransactionSchema = z.object({
   id: z.number(),
@@ -57,3 +58,39 @@ export const AccountSchema = z.object({
 })
 
 export type Account = z.infer<typeof AccountSchema>
+
+export type TransactionsApiResponse =
+  operations['getAllTransactions']['responses'][200]['content']['application/json']
+
+export type AccountsApiResponse =
+  operations['getAllManualAccounts']['responses'][200]['content']['application/json']
+
+export type CategoriesApiResponse =
+  operations['getAllCategories']['responses'][200]['content']['application/json']
+
+export type MeApiResponse =
+  operations['getMe']['responses'][200]['content']['application/json']
+
+export type TransactionFilters = NonNullable<
+  operations['getAllTransactions']['parameters']['query']
+>
+
+export const MeSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  email: z.string(),
+  primary_currency: z.string(),
+})
+
+export type Me = z.infer<typeof MeSchema>
+
+export interface CategoryFrequencyEntry {
+  categoryId: number
+  count: number
+  lastDate: string
+}
+
+export interface CategorySpending {
+  thisMonth: number
+  lastMonth: number
+}
