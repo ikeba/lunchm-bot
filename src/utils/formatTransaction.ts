@@ -62,7 +62,7 @@ export function formatTransactionList(transactions: Transaction[]): string {
   }
 
   const byDate = groupByDate(filtered)
-  const sortedDates = [...byDate.keys()].sort((a, b) => b.localeCompare(a))
+  const sortedDates = [...byDate.keys()].sort((a, b) => a.localeCompare(b))
 
   return sortedDates
     .map(date => formatDayGroup(date, byDate.get(date)!))
