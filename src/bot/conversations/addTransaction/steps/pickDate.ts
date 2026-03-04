@@ -3,6 +3,7 @@ import { restorePreview } from '../preview'
 import { backKeyboard, datePicker } from '@/bot/keyboards'
 import { DateCallback } from '@/bot/constants/callbacks'
 import { isoDate } from '@/utils/date'
+import { wideText } from '@/utils/text'
 
 const QUICK_PICKS: Record<string, number> = {
   [DateCallback.YESTERDAY]: -1,
@@ -14,7 +15,7 @@ async function pickDateManual(flow: FlowContext): Promise<void> {
   await flow.ctx.api.editMessageText(
     flow.chatId,
     flow.msgId,
-    `📅 Enter date (YYYY-MM-DD):\nCurrent: <code>${flow.draft.date}</code>`,
+    wideText(`📅 Enter date (YYYY-MM-DD):\nCurrent: <code>${flow.draft.date}</code>`),
     { parse_mode: 'HTML', reply_markup: backKeyboard() }
   )
 
@@ -44,7 +45,7 @@ export async function pickDate(
   await flow.ctx.api.editMessageText(
     flow.chatId,
     flow.msgId,
-    `📅 Select date:\nCurrent: <code>${flow.draft.date}</code>`,
+    wideText(`📅 Select date:\nCurrent: <code>${flow.draft.date}</code>`),
     { parse_mode: 'HTML', reply_markup: datePicker() }
   )
 

@@ -18,6 +18,6 @@ export function getAccounts(): Promise<Account[]> {
             a.status !== 'closed' && Number.parseFloat(a.balance ?? '0') !== 0
         )
     },
-    TTL_1W
+    { ttl: TTL_1W }
   )
 }

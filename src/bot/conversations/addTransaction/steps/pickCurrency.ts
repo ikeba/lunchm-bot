@@ -2,6 +2,7 @@ import type { FlowContext, FlowData } from '../flowContext'
 import { restorePreview } from '../preview'
 import { currencyKeyboard } from '@/bot/keyboards'
 import { CommonCallback, CurrencyCallback } from '@/bot/constants/callbacks'
+import { wideText } from '@/utils/text'
 
 export async function pickCurrency(
   flow: FlowContext,
@@ -10,7 +11,7 @@ export async function pickCurrency(
   await flow.ctx.api.editMessageText(
     flow.chatId,
     flow.msgId,
-    '💱 Select currency:',
+    wideText('💱 Select currency:'),
     { reply_markup: currencyKeyboard(data.currencies, flow.draft.currency) }
   )
 

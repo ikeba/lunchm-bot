@@ -2,6 +2,7 @@ import type { FlowContext, FlowData } from '../flowContext'
 import { restorePreview } from '../preview'
 import { accountKeyboard } from '@/bot/keyboards'
 import { AccountCallback, CommonCallback } from '@/bot/constants/callbacks'
+import { wideText } from '@/utils/text'
 
 export async function pickAccount(
   flow: FlowContext,
@@ -10,7 +11,7 @@ export async function pickAccount(
   await flow.ctx.api.editMessageText(
     flow.chatId,
     flow.msgId,
-    'Select account:',
+    wideText('Select account:'),
     { reply_markup: accountKeyboard(data.accounts) }
   )
 

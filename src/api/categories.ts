@@ -15,6 +15,6 @@ export function getCategories(): Promise<Category[]> {
         .map(c => CategorySchema.parse(c))
         .filter(c => !c.archived && !c.is_group)
     },
-    TTL_1W
+    { ttl: TTL_1W }
   )
 }

@@ -46,6 +46,12 @@ export const PreviewCallback = {
   EDIT_NOTE: 'edit:note',
 } as const
 
+export const PayeeCallback = {
+  SELECT_PREFIX: 'payee:s:',
+  SKIP: 'payee:skip',
+  USE_TYPED: 'payee:typed',
+} as const
+
 export const PostSaveCallback = {
   ADD_SIMILAR: 'add_similar',
   ADD_NEW: 'add_new',

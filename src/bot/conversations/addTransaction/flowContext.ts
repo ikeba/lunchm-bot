@@ -28,4 +28,5 @@ export interface FlowData {
   currencies: string[]
   accounts: Account[]
   categories: Category[]
+  payees: string[]
 }

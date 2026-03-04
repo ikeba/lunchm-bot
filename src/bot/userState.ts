@@ -2,7 +2,6 @@ import type { PrefKey } from '../core/db'
 import { deletePref, getPref, setPref } from '../core/db'
 
 export interface LastUsed {
-  currency?: string
   manualAccountId?: number
   accountName?: string
   categoryId?: number
@@ -14,7 +13,6 @@ export function getLastUsed(): LastUsed {
   const categoryIdRaw = getPref('last_used.category_id')
 
   return {
-    currency: getPref('last_used.currency') ?? undefined,
     manualAccountId: accountIdRaw ? Number(accountIdRaw) : undefined,
     accountName: getPref('last_used.account_name') ?? undefined,
     categoryId: categoryIdRaw ? Number(categoryIdRaw) : undefined,
@@ -23,7 +21,6 @@ export function getLastUsed(): LastUsed {
 }
 
 const PREF_KEYS = {
-  currency: 'last_used.currency',
   manualAccountId: 'last_used.account_id',
   accountName: 'last_used.account_name',
   categoryId: 'last_used.category_id',

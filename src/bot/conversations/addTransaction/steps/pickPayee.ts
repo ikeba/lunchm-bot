@@ -1,11 +1,164 @@
 import type { FlowContext, FlowData } from '../flowContext'
-import { pickTextInput } from '../helpers/pickTextInput'
+import { restorePreview } from '../preview'
+import { payeeKeyboard, PAYEE_PAGE_SIZE } from '@/bot/keyboards/payee'
+import {
+  CommonCallback,
+  FilterCallback,
+  PageCallback,
+  PayeeCallback,
+} from '@/bot/constants/callbacks'
+import { wideText } from '@/utils/text'
 
-const PROMPT = 'Enter payee (or /skip to clear):'
+type PayeeAction =
+  | { type: 'navigate'; page: number }
+  | { type: 'select'; index: number }
+  | { type: 'skip' }
+  | { type: 'use-typed' }
+  | { type: 'back' }
+  | { type: 'clear-filter' }
+  | { type: 'noop' }
+
+function parseAction(
+  data: string,
+  currentPage: number,
+  totalPages: number
+): PayeeAction {
+  switch (data) {
+    case PageCallback.NEXT:
+      return {
+        type: 'navigate',
+        page: Math.min(currentPage + 1, totalPages - 1),
+      }
+    case PageCallback.PREV:
+      return { type: 'navigate', page: Math.max(currentPage - 1, 0) }
+    case PageCallback.NOOP:
+      return { type: 'noop' }
+    case CommonCallback.BACK:
+      return { type: 'back' }
+    case FilterCallback.CLEAR:
+      return { type: 'clear-filter' }
+    case PayeeCallback.SKIP:
+      return { type: 'skip' }
+    case PayeeCallback.USE_TYPED:
+      return { type: 'use-typed' }
+    default:
+      if (data.startsWith(PayeeCallback.SELECT_PREFIX)) {
+        return {
+          type: 'select',
+          index: Number.parseInt(
+            data.slice(PayeeCallback.SELECT_PREFIX.length),
+            10
+          ),
+        }
+      }
+
+      return { type: 'noop' }
+  }
+}
 
 export async function pickPayee(
   flow: FlowContext,
-  _data: FlowData
+  data: FlowData
 ): Promise<void> {
-  await pickTextInput(flow, PROMPT, 'payee')
+  let filterText = ''
+  let page = 0
+
+  function getFiltered(text: string): string[] {
+    if (!text) {
+      return data.payees
+    }
+
+    const lower = text.toLowerCase()
+
+    return data.payees.filter(payee => payee.toLowerCase().includes(lower))
+  }
+
+  async function render(filtered: string[], text: string): Promise<void> {
+    const totalPages = Math.ceil(filtered.length / PAYEE_PAGE_SIZE) || 1
+    const label = wideText(text ? `🔍 "${text}":` : '🔍 Select payee (type to search):')
+
+    await flow.ctx.api.editMessageText(flow.chatId, flow.msgId, label, {
+      reply_markup: payeeKeyboard(
+        filtered,
+        page,
+        totalPages,
+        text || undefined
+      ),
+    })
+  }
+
+  await render(data.payees, filterText)
+
+  while (true) {
+    const update = await flow.conversation.wait()
+
+    if (update.message?.text) {
+      filterText = update.message.text.trim()
+      page = 0
+      await flow.ctx.api
+        .deleteMessage(flow.chatId, update.message.message_id)
+        .catch(() => {})
+      await render(getFiltered(filterText), filterText)
+      continue
+    }
+
+    if (!update.callbackQuery?.data) {
+      continue
+    }
+
+    await update.answerCallbackQuery()
+
+    const filtered = getFiltered(filterText)
+    const totalPages = Math.ceil(filtered.length / PAYEE_PAGE_SIZE) || 1
+    const action = parseAction(update.callbackQuery.data, page, totalPages)
+
+    switch (action.type) {
+      case 'navigate':
+        page = action.page
+        await flow.ctx.api.editMessageReplyMarkup(flow.chatId, flow.msgId, {
+          reply_markup: payeeKeyboard(
+            filtered,
+            page,
+            totalPages,
+            filterText || undefined
+          ),
+        })
+        continue
+
+      case 'clear-filter':
+        filterText = ''
+        page = 0
+        await render(getFiltered(''), '')
+        continue
+
+      case 'noop':
+        continue
+
+      case 'select':
+        flow.draft.payee = filtered[action.index]
+        await restorePreview(flow)
+
+        return
+
+      case 'use-typed':
+        if (filterText) {
+          flow.draft.payee = filterText
+        }
+
+        await restorePreview(flow)
+
+        return
+
+      case 'skip':
+        flow.draft.payee = undefined
+        await restorePreview(flow)
+
+        return
+
+      case 'back':
+        await restorePreview(flow)
+
+        return
+    }
+  }
 }

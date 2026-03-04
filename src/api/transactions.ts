@@ -43,9 +43,9 @@ export async function deleteTransaction(id: number): Promise<void> {
   await apiClient.delete(`/transactions/${id}`)
 }
 
-export async function getCategoryFrequency(): Promise<
-  CategoryFrequencyEntry[]
-> {
+export async function getCategoryFrequency(
+  force = false
+): Promise<CategoryFrequencyEntry[]> {
   return withCache(
     'category_frequency',
     async () => {
@@ -80,14 +80,13 @@ export async function getCategoryFrequency(): Promise<
         ...entry,
       }))
     },
-    TTL_1D
+    { ttl: TTL_1D, force }
   )
 }
 
-export function getRecentTransactions(): Promise<Transaction[]> {
-  return withCache(
-    'recent_transactions',
-    () => getTransactions(500, 3),
-    TTL_5MIN
-  )
+export function getRecentTransactions(force = false): Promise<Transaction[]> {
+  return withCache('recent_transactions', () => getTransactions(500, 3), {
+    ttl: TTL_5MIN,
+    force,
+  })
 }

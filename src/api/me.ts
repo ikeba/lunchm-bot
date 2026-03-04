@@ -19,6 +19,6 @@ export function getMe(): Promise<Me> {
 
       return MeSchema.parse(data)
     },
-    TTL_1W
+    { ttl: TTL_1W }
   )
 }

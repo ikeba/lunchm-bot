@@ -29,7 +29,7 @@ The bot is gated by `ALLOWED_USER_ID` via auth middleware, so all handlers assum
 | Core services | `src/core/` | `db.ts` (SQLite prefs), `cache.ts` (in-memory TTL), `logger.ts` |
 | Bot handlers | `src/bot/handlers/` | Simple command/callback handlers (balance, list, menu) |
 | Conversation | `src/bot/conversations/addTransaction/` | Multi-step add-transaction flow |
-| Keyboards | `src/bot/keyboards*.ts` | Inline keyboard builders |
+| Keyboards | `src/bot/keyboards/` | Inline keyboard builders; shared paged utility in `helpers/paged.ts` |
 | Constants | `src/bot/constants/callbacks.ts` | All callback data strings as `const` objects |
 
 **The `addTransaction` conversation** is the core feature. Its structure:
@@ -44,7 +44,7 @@ The bot is gated by `ALLOWED_USER_ID` via auth middleware, so all handlers assum
 
 **State persistence:** `src/core/db.ts` exposes a simple key-value `prefs` table in `data/bot.db`. User preferences (last-used currency, account, category) are read/written via `src/bot/userState.ts`.
 
-**In-memory cache:** `src/core/cache.ts` provides `withCache(key, fetcher, ttlMs)`. Currencies and categories are warmed at startup.
+**Cache:** `src/core/cache.ts` provides `withCache(key, fetcher, ttlMs)`. Backed by SQLite (`cache` table in `data/bot.db`) — persists across restarts. To bust a cache entry: `sqlite3 data/bot.db "DELETE FROM cache WHERE key = '<key>';"`. Currencies and categories are warmed at startup.
 
 **Path aliases:** `@/*` maps to `./src/*` (configured in `tsconfig.json`).
 

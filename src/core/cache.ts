@@ -8,11 +8,11 @@ export const TTL_5MIN = 5 * 60 * 1000
 export async function withCache<T>(
   key: string,
   fetcher: () => Promise<T>,
-  ttlMs = TTL_1H
+  { ttl = TTL_1H, force = false }: { ttl?: number; force?: boolean } = {}
 ): Promise<T> {
   const entry = getCacheEntry(key)
 
-  if (entry && Date.now() - entry.fetchedAt < ttlMs) {
+  if (!force && entry && Date.now() - entry.fetchedAt < ttl) {
     return JSON.parse(entry.value) as T
   }
 

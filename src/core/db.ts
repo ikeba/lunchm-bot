@@ -16,7 +16,6 @@ db.run(`CREATE TABLE IF NOT EXISTS cache (
 )`)
 
 export type PrefKey =
-  | 'last_used.currency'
   | 'last_used.account_id'
   | 'last_used.account_name'
   | 'last_used.category_id'
@@ -63,4 +62,8 @@ export function setCacheEntry(key: string, value: string): void {
     'INSERT OR REPLACE INTO cache (key, value, fetched_at) VALUES (?, ?, ?)',
     [key, value, Date.now()]
   )
+}
+
+export function clearCache(): void {
+  db.run('DELETE FROM cache')
 }

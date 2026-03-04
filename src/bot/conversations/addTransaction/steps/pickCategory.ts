@@ -13,6 +13,7 @@ import {
   getRecentIds,
   sortByFrequency,
 } from '../helpers/categoryFrequency'
+import { wideText } from '@/utils/text'
 
 export interface CategorySelection {
   categoryId: number
@@ -90,7 +91,7 @@ export async function pickCategory(
   async function render(filtered: Category[], text: string): Promise<void> {
     const totalPages = Math.ceil(filtered.length / CATEGORY_PAGE_SIZE) || 1
     const filter = text || undefined
-    const label = text ? `Select category (🔍 "${text}"):` : 'Select category:'
+    const label = wideText(text ? `Select category (🔍 "${text}"):` : 'Select category:')
 
     await flow.ctx.api.editMessageText(flow.chatId, flow.msgId, label, {
       reply_markup: categoryKeyboard(

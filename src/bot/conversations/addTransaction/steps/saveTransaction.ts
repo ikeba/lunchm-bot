@@ -3,6 +3,7 @@ import { renderPreview } from '../preview'
 import { createTransaction } from '@/api/transactions'
 import { afterSaveKeyboard, previewKeyboard } from '@/bot/keyboards'
 import { setLastUsed } from '@/bot/userState'
+import { backgroundRefresh } from '@/core/backgroundRefresh'
 import { logger } from '@/core/logger'
 
 export async function saveTransaction(
@@ -25,7 +26,6 @@ export async function saveTransaction(
 
     await conversation.external(() =>
       setLastUsed({
-        currency: draft.currency,
         manualAccountId: draft.manualAccountId,
         accountName: draft.accountName,
         categoryId: draft.categoryId,
@@ -35,6 +35,10 @@ export async function saveTransaction(
 
     await ctx.api.editMessageText(chatId, msgId, 'Saved ✅', {
       reply_markup: afterSaveKeyboard(created.id),
+    })
+
+    await conversation.external(() => {
+      backgroundRefresh(true)
     })
 
     return created.id

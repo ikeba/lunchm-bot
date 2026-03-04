@@ -1,6 +1,8 @@
 import { getAccounts } from '@/api/accounts'
 import { getCategories } from '@/api/categories'
 import { getCurrencies } from '@/api/currencies'
+import { getMe } from '@/api/me'
+import { getTopPayees } from '@/api/payees'
 import { deleteTransaction } from '@/api/transactions'
 import type { MyContext } from '@/types/context'
 import { previewKeyboard } from '@/bot/keyboards'
@@ -13,7 +15,12 @@ import {
   PostSaveCallback,
   PreviewCallback,
 } from '@/bot/constants/callbacks'
-import type { Conv, FlowContext, FlowData, TransactionDraft } from './flowContext'
+import type {
+  Conv,
+  FlowContext,
+  FlowData,
+  TransactionDraft,
+} from './flowContext'
 import { renderPreview, restorePreview } from './preview'
 import { pickAccount } from './steps/pickAccount'
 import { pickCategory } from './steps/pickCategory'
@@ -38,11 +45,18 @@ export async function addTransaction(
   conversation: Conv,
   ctx: MyContext
 ): Promise<void> {
-  const [currencies, accounts, categories] = await conversation.external(() =>
-    Promise.all([getCurrencies(), getAccounts(), getCategories()])
-  )
+  const [currencies, accounts, categories, payees, me] =
+    await conversation.external(() =>
+      Promise.all([
+        getCurrencies(),
+        getAccounts(),
+        getCategories(),
+        getTopPayees(),
+        getMe(),
+      ])
+    )
 
-  const data: FlowData = { currencies, accounts, categories }
+  const data: FlowData = { currencies, accounts, categories, payees }
   const chatId = ctx.chat!.id
   let useLastUsed = true
 
@@ -62,7 +76,7 @@ export async function addTransaction(
 
     const draft: TransactionDraft = {
       amount: amountResult.amount,
-      currency: lastUsed.currency ?? currencies[0] ?? 'usd',
+      currency: me.primary_currency,
       manualAccountId: lastUsed.manualAccountId,
       accountName: lastUsed.accountName,
       categoryId: lastUsed.categoryId,

@@ -17,6 +17,6 @@ export function getCurrencies(): Promise<string[]> {
 
       return [...seen]
     },
-    TTL_1W
+    { ttl: TTL_1W }
   )
 }
