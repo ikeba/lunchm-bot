@@ -24,10 +24,10 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   }
 
   if (method !== 'GET') {
-    logger.info(`[http] ${method} ${path} → ${res.status} ${ms}ms`, rawBody)
+    logger.info(`[http] ${method} ${path} → ${res.status} ${ms}ms`, rawBody || undefined)
   }
 
-  return JSON.parse(rawBody) as T
+  return (rawBody ? JSON.parse(rawBody) : null) as T
 }
 
 export const apiClient = {

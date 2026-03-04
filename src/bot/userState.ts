@@ -1,5 +1,6 @@
 import type { PrefKey } from '../core/db'
 import { deletePref, getPref, setPref } from '../core/db'
+import { logger } from '../core/logger'
 
 export interface LastUsed {
   manualAccountId?: number
@@ -12,12 +13,16 @@ export function getLastUsed(): LastUsed {
   const accountIdRaw = getPref('last_used.account_id')
   const categoryIdRaw = getPref('last_used.category_id')
 
-  return {
+  const result = {
     manualAccountId: accountIdRaw ? Number(accountIdRaw) : undefined,
     accountName: getPref('last_used.account_name') ?? undefined,
     categoryId: categoryIdRaw ? Number(categoryIdRaw) : undefined,
     categoryName: getPref('last_used.category_name') ?? undefined,
   }
+
+  logger.info('[userState] getLastUsed', result)
+
+  return result
 }
 
 const PREF_KEYS = {
@@ -40,4 +45,6 @@ export function setLastUsed(patch: Partial<LastUsed>): void {
 
     val != null ? setPref(key, String(val)) : deletePref(key)
   }
+
+  logger.info('[userState] setLastUsed', patch)
 }
