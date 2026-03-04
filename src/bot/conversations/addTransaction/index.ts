@@ -11,6 +11,7 @@ import { getLastUsed } from '@/bot/userState'
 import { logger } from '@/core/logger'
 import { invalidateCache, CACHE_KEYS } from '@/core/cache'
 import { isoDate } from '@/utils/date'
+import { safeDelete } from '@/utils/telegram'
 import {
   MenuCallback,
   PostSaveCallback,
@@ -62,9 +63,7 @@ export async function addTransaction(
   let useLastUsed = true
 
   const del = (...ids: number[]) =>
-    Promise.all(
-      ids.map(id => ctx.api.deleteMessage(chatId, id).catch(() => {}))
-    )
+    Promise.all(ids.map(id => safeDelete(ctx.api, chatId, id)))
 
   while (true) {
     const amountResult = await pickAmount(conversation, ctx, chatId)

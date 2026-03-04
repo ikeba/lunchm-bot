@@ -2,6 +2,7 @@ import type { MyContext } from '@/types/context'
 import { backToMenuKeyboard } from '@/bot/keyboards'
 import { MENU_KEYBOARD, MENU_TEXT } from '@/bot/handlers/menu'
 import type { Conv } from '../flowContext'
+import { safeDelete } from '@/utils/telegram'
 
 const PROMPT_INITIAL = 'Enter amount (e.g. 12.50):'
 const PROMPT_RETRY = 'Invalid amount. Try again:'
@@ -39,9 +40,7 @@ export async function pickAmount(
 
     const raw = event.message.text.trim().replace(',', '.')
 
-    await ctx.api
-      .deleteMessage(chatId, event.message.message_id)
-      .catch(() => {})
+    await safeDelete(ctx.api, chatId, event.message.message_id)
 
     if (Number.isNaN(Number.parseFloat(raw))) {
       await ctx.api

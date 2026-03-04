@@ -24,7 +24,10 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   }
 
   if (method !== 'GET') {
-    logger.info(`[http] ${method} ${path} → ${res.status} ${ms}ms`, rawBody || undefined)
+    logger.info(
+      `[http] ${method} ${path} → ${res.status} ${ms}ms`,
+      rawBody || undefined
+    )
   }
 
   return (rawBody ? JSON.parse(rawBody) : null) as T

@@ -1,5 +1,6 @@
 import type { FlowContext, FlowData } from '../flowContext'
 import { restorePreview } from '../preview'
+import { safeDelete } from '@/utils/telegram'
 import { payeeKeyboard, PAYEE_PAGE_SIZE } from '@/bot/keyboards/payee'
 import {
   CommonCallback,
@@ -75,7 +76,9 @@ export async function pickPayee(
 
   async function render(filtered: string[], text: string): Promise<void> {
     const totalPages = Math.ceil(filtered.length / PAYEE_PAGE_SIZE) || 1
-    const label = wideText(text ? `🔍 "${text}":` : '🔍 Select payee (type to search):')
+    const label = wideText(
+      text ? `🔍 "${text}":` : '🔍 Select payee (type to search):'
+    )
 
     await flow.ctx.api.editMessageText(flow.chatId, flow.msgId, label, {
       reply_markup: payeeKeyboard(
@@ -95,9 +98,7 @@ export async function pickPayee(
     if (update.message?.text) {
       filterText = update.message.text.trim()
       page = 0
-      await flow.ctx.api
-        .deleteMessage(flow.chatId, update.message.message_id)
-        .catch(() => {})
+      await safeDelete(flow.ctx.api, flow.chatId, update.message.message_id)
       await render(getFiltered(filterText), filterText)
       continue
     }

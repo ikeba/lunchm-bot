@@ -1,13 +1,10 @@
 import type { Transaction } from '@/api/types/types'
+import { escapeHtml } from '@/utils/text'
 
 const NUMBER_FORMAT = new Intl.NumberFormat('en-US', {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
 })
-
-function escapeHtml(text: string): string {
-  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-}
 
 function isZeroAmount(amount: string): boolean {
   return Math.abs(Number.parseFloat(amount)) < 0.01

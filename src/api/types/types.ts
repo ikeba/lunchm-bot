@@ -11,6 +11,7 @@ export const TransactionSchema = z.object({
   account_id: z.number().nullable().optional(),
   status: z.string().nullable().optional(),
   is_income: z.boolean().default(false),
+  to_base: z.number().default(0),
 })
 
 export type Transaction = z.infer<typeof TransactionSchema>

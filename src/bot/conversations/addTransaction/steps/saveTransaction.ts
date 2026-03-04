@@ -1,6 +1,13 @@
 import type { FlowContext } from '../flowContext'
 import { renderPreview } from '../preview'
-import { createTransaction } from '@/api/transactions'
+import { renderSaveSummary } from '../summary'
+import type { SummaryData } from '../summary'
+import {
+  createTransaction,
+  getCategoryMonthlySpending,
+} from '@/api/transactions'
+import { getAccounts } from '@/api/accounts'
+import { getMe } from '@/api/me'
 import { afterSaveKeyboard, previewKeyboard } from '@/bot/keyboards'
 import { setLastUsed } from '@/bot/userState'
 import { backgroundRefresh } from '@/core/backgroundRefresh'
@@ -34,18 +41,50 @@ export async function saveTransaction(
       })
     )
 
-    await ctx.api.editMessageText(chatId, msgId, 'Saved ✅', {
-      reply_markup: afterSaveKeyboard(created.id),
-    })
-
     await conversation.external(() => {
       invalidateCache(
         CACHE_KEYS.RECENT_TRANSACTIONS,
         CACHE_KEYS.CATEGORY_FREQUENCY,
-        CACHE_KEYS.PAYEES
+        CACHE_KEYS.PAYEES,
+        CACHE_KEYS.ACCOUNTS
       )
       backgroundRefresh()
     })
+
+    const summaryData = await conversation.external(
+      async (): Promise<SummaryData | null> => {
+        try {
+          const [accounts, me, spending] = await Promise.all([
+            getAccounts(),
+            getMe(),
+            draft.categoryId != null
+              ? getCategoryMonthlySpending(draft.categoryId)
+              : Promise.resolve(undefined),
+          ])
+
+          return {
+            account: accounts.find(a => a.id === draft.manualAccountId),
+            categoryName: draft.categoryName,
+            spending,
+            primaryCurrency: me.primary_currency,
+          }
+        } catch (summaryError) {
+          logger.warn('[saveTransaction] summary fetch failed', summaryError)
+
+          return null
+        }
+      }
+    )
+
+    await ctx.api.editMessageText(
+      chatId,
+      msgId,
+      renderSaveSummary(summaryData),
+      {
+        parse_mode: 'HTML',
+        reply_markup: afterSaveKeyboard(created.id),
+      }
+    )
 
     return created.id
   } catch (error) {

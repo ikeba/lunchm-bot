@@ -4,7 +4,9 @@ import { isoDate } from '@/utils/date'
 
 export type FrequencyMap = Map<number, { count: number; lastDate: string }>
 
-export function toFrequencyMap(entries: CategoryFrequencyEntry[]): FrequencyMap {
+export function toFrequencyMap(
+  entries: CategoryFrequencyEntry[]
+): FrequencyMap {
   return new Map(
     entries.map(entry => [
       entry.categoryId,
