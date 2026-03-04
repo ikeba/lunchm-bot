@@ -5,6 +5,7 @@ import type { MyContext } from './types/context'
 import { addTransaction } from './bot/conversations/addTransaction'
 import { setupCommands } from './bot/handlers/commands'
 import { registerMenu, registerMenuCallbacks } from './bot/handlers/menu'
+import { registerLogsCommand } from './bot/handlers/logs'
 import { authMiddleware, skipOldUpdatesMiddleware } from './bot/middleware'
 import { config } from './config'
 import { logger } from './core/logger'
@@ -27,6 +28,7 @@ bot.use(conversations())
 
 // /menu, /start, /help must run before createConversation to exit active conversations
 registerMenu(bot)
+registerLogsCommand(bot)
 bot.use(createConversation(addTransaction))
 registerMenuCallbacks(bot)
 

@@ -20,12 +20,11 @@ function logDay(): string {
 }
 
 async function writeToFile(line: string): Promise<void> {
-  const dir = 'logs'
+  const dir = 'data/logs'
 
   await mkdir(dir, { recursive: true })
   await Bun.write(
     Bun.file(`${dir}/${logDay()}.log`),
-    // append by reading existing + adding new line
     `${await readExisting(`${dir}/${logDay()}.log`)}${line}\n`
   )
 }

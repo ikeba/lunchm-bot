@@ -3,8 +3,7 @@ import { logger } from './logger'
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const method = options?.method ?? 'GET'
-
-  logger.info(`[http] ${method} ${path}`)
+  const start = Date.now()
 
   const res = await fetch(`${config.LUNCH_MONEY_BASE_URL}${path}`, {
     ...options,
@@ -15,17 +14,19 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     },
   })
 
-  if (!res.ok) {
-    const body = await res.text().catch(() => '')
+  const ms = Date.now() - start
 
-    logger.error(
-      `[http] ${method} ${path} → ${res.status} ${res.statusText}`,
-      body
-    )
+  const rawBody = await res.text().catch(() => '')
+  const preview = rawBody.length > 200 ? `${rawBody.slice(0, 200)}…` : rawBody
+
+  if (!res.ok) {
+    logger.error(`[http] ${method} ${path} → ${res.status} ${ms}ms`, preview)
     throw new Error(`Lunch Money API error: ${res.status} ${res.statusText}`)
   }
 
-  return res.json() as Promise<T>
+  logger.info(`[http] ${method} ${path} → ${res.status} ${ms}ms`, preview)
+
+  return JSON.parse(rawBody) as T
 }
 
 export const apiClient = {
