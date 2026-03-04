@@ -1,5 +1,6 @@
 import { conversations, createConversation } from '@grammyjs/conversations'
 import { Bot } from 'grammy'
+import process from 'node:process'
 import type { MyContext } from './types/context'
 import { addTransaction } from './bot/conversations/addTransaction'
 import { setupCommands } from './bot/handlers/commands'
@@ -36,6 +37,11 @@ bot.catch(err => {
     update: err.ctx?.update,
   })
 })
+
+const stopBot = () => bot.stop()
+
+process.once('SIGINT', stopBot)
+process.once('SIGTERM', stopBot)
 
 bot.start({
   onStart: async info => {
