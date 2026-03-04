@@ -21,10 +21,7 @@ function rankPayees(txs: unknown[]): string[] {
 
   for (const transaction of filteredTransactions) {
     if (transaction.payee) {
-      counts.set(
-        transaction.payee,
-        (counts.get(transaction.payee) ?? 0) + 1
-      )
+      counts.set(transaction.payee, (counts.get(transaction.payee) ?? 0) + 1)
     }
   }
 

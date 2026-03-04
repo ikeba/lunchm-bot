@@ -17,19 +17,15 @@ import {
   PostSaveCallback,
   PreviewCallback,
 } from '@/bot/constants/callbacks'
-import type {
-  Conv,
-  FlowContext,
-  FlowData,
-  TransactionDraft,
-} from './flowContext'
+import type { Conv } from '../shared/types'
+import type { FlowContext, FlowData, TransactionDraft } from './flowContext'
 import { renderPreview, restorePreview } from './preview'
 import { pickAccount } from './steps/pickAccount'
 import { pickCategory } from './steps/pickCategory'
 import { pickCurrency } from './steps/pickCurrency'
 import { pickDate } from './steps/pickDate'
 import { pickPayee } from './steps/pickPayee'
-import { pickAmount } from './steps/pickAmount'
+import { pickAmount } from '../shared/pickAmount'
 import { pickNotes } from './steps/pickNotes'
 import { saveTransaction } from './steps/saveTransaction'
 

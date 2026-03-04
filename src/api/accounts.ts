@@ -7,9 +7,7 @@ export function getAccounts(): Promise<Account[]> {
   return withCache(
     CACHE_KEYS.ACCOUNTS,
     async () => {
-      const data = await apiClient.get<AccountsApiResponse>(
-        '/manual_accounts'
-      )
+      const data = await apiClient.get<AccountsApiResponse>('/manual_accounts')
 
       return (data.manual_accounts ?? [])
         .map(a => AccountSchema.parse(a))

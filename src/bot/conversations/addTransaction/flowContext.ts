@@ -1,8 +1,6 @@
-import type { Conversation } from '@grammyjs/conversations'
 import type { Account, Category } from '@/api/types/types'
 import type { MyContext } from '@/types/context'
-
-export type Conv = Conversation<MyContext, MyContext>
+import type { Conv } from '../shared/types'
 
 export interface TransactionDraft {
   amount: string

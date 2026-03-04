@@ -1,23 +1,31 @@
 import type { MyContext } from '@/types/context'
 import { backToMenuKeyboard } from '@/bot/keyboards'
 import { MENU_KEYBOARD, MENU_TEXT } from '@/bot/handlers/menu'
-import type { Conv } from '../flowContext'
 import { safeDelete } from '@/utils/telegram'
-
-const PROMPT_INITIAL = 'Enter amount (e.g. 12.50):'
-const PROMPT_RETRY = 'Invalid amount. Try again:'
+import type { Conv } from './types'
 
 export interface AmountResult {
   amount: string
   msgId: number
 }
 
+interface PickAmountOptions {
+  promptInitial?: string
+  promptRetry?: string
+}
+
 export async function pickAmount(
   conversation: Conv,
   ctx: MyContext,
-  chatId: number
+  chatId: number,
+  options: PickAmountOptions = {}
 ): Promise<AmountResult | null> {
-  const promptMsg = await ctx.reply(PROMPT_INITIAL, {
+  const {
+    promptInitial = 'Enter amount (e.g. 12.50):',
+    promptRetry = 'Invalid amount. Try again:',
+  } = options
+
+  const promptMsg = await ctx.reply(promptInitial, {
     reply_markup: backToMenuKeyboard(),
   })
 
@@ -44,7 +52,7 @@ export async function pickAmount(
 
     if (Number.isNaN(Number.parseFloat(raw))) {
       await ctx.api
-        .editMessageText(chatId, promptMsg.message_id, PROMPT_RETRY, {
+        .editMessageText(chatId, promptMsg.message_id, promptRetry, {
           reply_markup: backToMenuKeyboard(),
         })
         .catch(() => {})

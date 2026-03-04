@@ -14,7 +14,9 @@ const Actions = {
   AccountsList: 'menu:accounts-list',
 } as const
 
-export const MENU_TEXT = wideText(`<b>Lunch Money Bot 💰</b>  <code>v${version}</code>`)
+export const MENU_TEXT = wideText(
+  `<b>Lunch Money Bot 💰</b>  <code>v${version}</code>`
+)
 export const MENU_KEYBOARD = new InlineKeyboard()
   .text('➕ Add transaction', Actions.AddTransaction)
   .text('💸 Transfer', Actions.Transfer)

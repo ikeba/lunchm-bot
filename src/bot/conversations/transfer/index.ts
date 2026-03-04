@@ -23,14 +23,12 @@ import {
 import { invalidateCache, CACHE_KEYS } from '@/core/cache'
 import { logger } from '@/core/logger'
 import { isoDate } from '@/utils/date'
-import { safeDelete } from '@/utils/telegram'
 import { wideText } from '@/utils/text'
 import type { MyContext } from '@/types/context'
-import type { Conv, TransferDraft, TransferFlowContext } from './flowContext'
-import {
-  renderTransferSuccess,
-  restoreTransferPreview,
-} from './preview'
+import { pickAmount } from '../shared/pickAmount'
+import type { Conv } from '../shared/types'
+import type { TransferDraft, TransferFlowContext } from './flowContext'
+import { renderTransferSuccess, restoreTransferPreview } from './preview'
 
 const QUICK_PICKS: Record<string, number> = {
   [DateCallback.YESTERDAY]: -1,
@@ -43,56 +41,6 @@ async function exitToMenu(flow: TransferFlowContext): Promise<void> {
     parse_mode: 'HTML',
     reply_markup: MENU_KEYBOARD,
   })
-}
-
-async function pickAmount(
-  conversation: Conv,
-  ctx: MyContext,
-  chatId: number
-): Promise<{ amount: string; msgId: number } | null> {
-  const promptMsg = await ctx.reply('Enter transfer amount (e.g. 100.00):', {
-    reply_markup: backToMenuKeyboard(),
-  })
-
-  while (true) {
-    const event = await conversation.wait()
-
-    if (event.callbackQuery) {
-      await event.answerCallbackQuery()
-      await ctx.api.editMessageText(chatId, promptMsg.message_id, MENU_TEXT, {
-        parse_mode: 'HTML',
-        reply_markup: MENU_KEYBOARD,
-      })
-
-      return null
-    }
-
-    if (!event.message?.text) {
-      continue
-    }
-
-    const raw = event.message.text.trim().replace(',', '.')
-
-    await safeDelete(ctx.api, chatId, event.message.message_id)
-
-    if (Number.isNaN(Number.parseFloat(raw))) {
-      await ctx.api
-        .editMessageText(
-          chatId,
-          promptMsg.message_id,
-          'Invalid amount. Try again:',
-          { reply_markup: backToMenuKeyboard() }
-        )
-        .catch(() => {})
-
-      continue
-    }
-
-    return {
-      amount: Number.parseFloat(raw).toFixed(2),
-      msgId: promptMsg.message_id,
-    }
-  }
 }
 
 async function pickSourceAccount(
@@ -117,7 +65,10 @@ async function pickSourceAccount(
     return false
   }
 
-  const accountId = Number.parseInt(sel.slice(AccountCallback.PREFIX.length), 10)
+  const accountId = Number.parseInt(
+    sel.slice(AccountCallback.PREFIX.length),
+    10
+  )
   const account = accounts.find(a => a.id === accountId)
 
   if (!account) {
@@ -154,7 +105,10 @@ async function pickDestinationAccount(
     return false
   }
 
-  const accountId = Number.parseInt(sel.slice(AccountCallback.PREFIX.length), 10)
+  const accountId = Number.parseInt(
+    sel.slice(AccountCallback.PREFIX.length),
+    10
+  )
   const account = accounts.find(a => a.id === accountId)
 
   if (!account) {
@@ -194,7 +148,9 @@ async function editDateManual(flow: TransferFlowContext): Promise<void> {
   await flow.ctx.api.editMessageText(
     flow.chatId,
     flow.msgId,
-    wideText(`📅 Enter date (YYYY-MM-DD):\nCurrent: <code>${flow.draft.date}</code>`),
+    wideText(
+      `📅 Enter date (YYYY-MM-DD):\nCurrent: <code>${flow.draft.date}</code>`
+    ),
     { parse_mode: 'HTML', reply_markup: backKeyboard() }
   )
 
@@ -248,14 +204,17 @@ export async function addTransfer(
 ): Promise<void> {
   const chatId = ctx.chat!.id
 
-  const amountResult = await pickAmount(conversation, ctx, chatId)
+  const amountResult = await pickAmount(conversation, ctx, chatId, {
+    promptInitial: 'Enter transfer amount (e.g. 100.00):',
+  })
 
   if (amountResult === null) {
     return
   }
 
-  const [accounts, currencies, me, categories] = await conversation.external(() =>
-    Promise.all([getAccounts(), getCurrencies(), getMe(), getCategories()])
+  const [accounts, currencies, me, categories] = await conversation.external(
+    () =>
+      Promise.all([getAccounts(), getCurrencies(), getMe(), getCategories()])
   )
 
   const transferCategory = categories.find(
@@ -353,7 +312,13 @@ export async function addTransfer(
   await flow.ctx.api.editMessageText(
     flow.chatId,
     flow.msgId,
-    renderTransferSuccess(draft, beforeSource, beforeDest, afterSource, afterDest),
+    renderTransferSuccess(
+      draft,
+      beforeSource,
+      beforeDest,
+      afterSource,
+      afterDest
+    ),
     { reply_markup: backToMenuKeyboard() }
   )
 

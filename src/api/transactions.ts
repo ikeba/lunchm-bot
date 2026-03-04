@@ -57,7 +57,11 @@ export async function getTransactions(
   const end = isoDate(1) // +1 day to cover ahead-of-UTC timezones
   // Fetch all transactions in range (API limit >> desired limit), then sort and slice
   const data = await apiClient.get<TransactionsApiResponse>(
-    buildPath('/transactions', { limit: 1000, start_date: start, end_date: end })
+    buildPath('/transactions', {
+      limit: 1000,
+      start_date: start,
+      end_date: end,
+    })
   )
 
   return (data.transactions ?? [])
