@@ -8,6 +8,7 @@ import {
   MenuCallback,
   PostSaveCallback,
   PreviewCallback,
+  TransferCallback,
 } from '@/bot/constants/callbacks'
 
 export { categoryKeyboard, CATEGORY_PAGE_SIZE } from '@/bot/keyboards/category'
@@ -80,6 +81,16 @@ export function currencyKeyboard(
   kb.text('↩ Back', CommonCallback.BACK)
 
   return kb
+}
+
+export function transferPreviewKeyboard(): InlineKeyboard {
+  return new InlineKeyboard()
+    .text('✅ Confirm', TransferCallback.CONFIRM)
+    .row()
+    .text('📅 Edit Date', TransferCallback.EDIT_DATE)
+    .text('💱 Edit Currency', TransferCallback.EDIT_CURRENCY)
+    .row()
+    .text('❌ Cancel', TransferCallback.CANCEL)
 }
 
 export function accountKeyboard(accounts: Account[]): InlineKeyboard {

@@ -82,6 +82,40 @@ export async function deleteTransaction(id: number): Promise<void> {
   await apiClient.delete(`/transactions/${id}`)
 }
 
+export async function createTransferGroup(params: {
+  amount: string
+  currency: string
+  date: string
+  sourceAccountId: number
+  destinationAccountId: number
+  categoryId?: number
+}): Promise<void> {
+  const [src, dest] = await Promise.all([
+    createTransaction({
+      date: params.date,
+      amount: params.amount,
+      currency: params.currency,
+      payee: 'Transfer',
+      manual_account_id: params.sourceAccountId,
+      category_id: params.categoryId,
+    }),
+    createTransaction({
+      date: params.date,
+      amount: `-${params.amount}`,
+      currency: params.currency,
+      payee: 'Transfer',
+      manual_account_id: params.destinationAccountId,
+      category_id: params.categoryId,
+    }),
+  ])
+
+  await apiClient.post('/transactions/group', {
+    ids: [src.id, dest.id],
+    date: params.date,
+    payee: 'Transfer',
+  })
+}
+
 export async function getCategoryFrequency(): Promise<
   CategoryFrequencyEntry[]
 > {

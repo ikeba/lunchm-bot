@@ -3,6 +3,7 @@ import { Bot } from 'grammy'
 import process from 'node:process'
 import type { MyContext } from './types/context'
 import { addTransaction } from './bot/conversations/addTransaction'
+import { addTransfer } from './bot/conversations/transfer'
 import { setupCommands } from './bot/handlers/commands'
 import { registerMenu, registerMenuCallbacks } from './bot/handlers/menu'
 import { registerLogsCommand } from './bot/handlers/logs'
@@ -31,6 +32,7 @@ bot.use(conversations())
 registerMenu(bot)
 registerLogsCommand(bot)
 bot.use(createConversation(addTransaction))
+bot.use(createConversation(addTransfer))
 registerMenuCallbacks(bot)
 
 bot.catch(err => {

@@ -57,3 +57,10 @@ export const PostSaveCallback = {
   ADD_NEW: 'add_new',
   UNDO_PREFIX: 'undo:',
 } as const
+
+export const TransferCallback = {
+  CONFIRM: 'transfer:confirm',
+  CANCEL: 'transfer:cancel',
+  EDIT_DATE: 'transfer:edit:date',
+  EDIT_CURRENCY: 'transfer:edit:currency',
+} as const
