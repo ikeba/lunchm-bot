@@ -10,6 +10,7 @@ import { authMiddleware, skipOldUpdatesMiddleware } from './bot/middleware'
 import { config } from './config'
 import { logger } from './core/logger'
 import { backgroundRefresh } from './core/backgroundRefresh'
+import { invalidateCache, CACHE_KEYS } from './core/cache'
 
 const bot = new Bot<MyContext>(config.TELEGRAM_BOT_TOKEN)
 
@@ -52,6 +53,7 @@ bot.start({
       logger.warn('[startup] setupCommands failed', e)
     )
 
-    backgroundRefresh(true)
+    invalidateCache(...Object.values(CACHE_KEYS))
+    backgroundRefresh()
   },
 })

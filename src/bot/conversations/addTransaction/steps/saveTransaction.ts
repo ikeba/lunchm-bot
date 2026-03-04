@@ -4,6 +4,7 @@ import { createTransaction } from '@/api/transactions'
 import { afterSaveKeyboard, previewKeyboard } from '@/bot/keyboards'
 import { setLastUsed } from '@/bot/userState'
 import { backgroundRefresh } from '@/core/backgroundRefresh'
+import { invalidateCache, CACHE_KEYS } from '@/core/cache'
 import { logger } from '@/core/logger'
 
 export async function saveTransaction(
@@ -38,7 +39,12 @@ export async function saveTransaction(
     })
 
     await conversation.external(() => {
-      backgroundRefresh(true)
+      invalidateCache(
+        CACHE_KEYS.RECENT_TRANSACTIONS,
+        CACHE_KEYS.CATEGORY_FREQUENCY,
+        CACHE_KEYS.PAYEES
+      )
+      backgroundRefresh()
     })
 
     return created.id

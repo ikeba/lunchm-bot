@@ -1,10 +1,10 @@
-import { withCache, TTL_1W } from '@/core/cache'
+import { withCache, TTL_1W, CACHE_KEYS } from '@/core/cache'
 import { getAccounts } from './accounts'
 import { getMe } from './me'
 
-export function getCurrencies(force = false): Promise<string[]> {
+export function getCurrencies(): Promise<string[]> {
   return withCache(
-    'currencies',
+    CACHE_KEYS.CURRENCIES,
     async () => {
       const [me, accounts] = await Promise.all([getMe(), getAccounts()])
       const seen = new Set<string>([me.primary_currency])
@@ -17,6 +17,6 @@ export function getCurrencies(force = false): Promise<string[]> {
 
       return [...seen]
     },
-    { ttl: TTL_1W, force }
+    { ttl: TTL_1W }
   )
 }

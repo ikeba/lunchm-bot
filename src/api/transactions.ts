@@ -1,5 +1,5 @@
 import { apiClient } from '@/core/httpClient'
-import { withCache, TTL_1D, TTL_5MIN } from '@/core/cache'
+import { withCache, TTL_1D, TTL_5MIN, CACHE_KEYS } from '@/core/cache'
 import { isoDate } from '@/utils/date'
 import { NewTransactionSchema, TransactionSchema } from './types/types'
 import type { NewTransaction, Transaction } from './types/types'
@@ -43,11 +43,9 @@ export async function deleteTransaction(id: number): Promise<void> {
   await apiClient.delete(`/transactions/${id}`)
 }
 
-export async function getCategoryFrequency(
-  force = false
-): Promise<CategoryFrequencyEntry[]> {
+export async function getCategoryFrequency(): Promise<CategoryFrequencyEntry[]> {
   return withCache(
-    'category_frequency',
+    CACHE_KEYS.CATEGORY_FREQUENCY,
     async () => {
       const data = await apiClient.get<{ transactions: unknown[] }>(
         `/transactions?limit=500&start_date=${isoDate(-90)}&end_date=${isoDate(1)}`
@@ -80,13 +78,12 @@ export async function getCategoryFrequency(
         ...entry,
       }))
     },
-    { ttl: TTL_1D, force }
+    { ttl: TTL_1D }
   )
 }
 
-export function getRecentTransactions(force = false): Promise<Transaction[]> {
-  return withCache('recent_transactions', () => getTransactions(500, 3), {
+export function getRecentTransactions(): Promise<Transaction[]> {
+  return withCache(CACHE_KEYS.RECENT_TRANSACTIONS, () => getTransactions(500, 3), {
     ttl: TTL_5MIN,
-    force,
   })
 }

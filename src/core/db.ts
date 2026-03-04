@@ -64,6 +64,12 @@ export function setCacheEntry(key: string, value: string): void {
   )
 }
 
+export function deleteCacheEntries(keys: string[]): void {
+  for (const key of keys) {
+    db.run('DELETE FROM cache WHERE key = ?', [key])
+  }
+}
+
 export function clearCache(): void {
   db.run('DELETE FROM cache')
 }

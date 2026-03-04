@@ -4,14 +4,14 @@ import { getTopPayees } from '@/api/payees'
 import { getCategoryFrequency, getRecentTransactions } from '@/api/transactions'
 import { logger } from '@/core/logger'
 
-export function backgroundRefresh(force = false): void {
+export function backgroundRefresh(): void {
   try {
     Promise.all([
-      getCategories(force),
-      getCurrencies(force),
-      getCategoryFrequency(force),
-      getRecentTransactions(force),
-      getTopPayees(force),
+      getCategories(),
+      getCurrencies(),
+      getCategoryFrequency(),
+      getRecentTransactions(),
+      getTopPayees(),
     ])
     logger.info('[backgroundRefresh] successful')
   } catch (err) {

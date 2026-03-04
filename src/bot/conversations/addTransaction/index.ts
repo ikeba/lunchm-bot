@@ -9,6 +9,7 @@ import { previewKeyboard } from '@/bot/keyboards'
 import { MENU_KEYBOARD, MENU_TEXT } from '@/bot/handlers/menu'
 import { getLastUsed } from '@/bot/userState'
 import { logger } from '@/core/logger'
+import { invalidateCache, CACHE_KEYS } from '@/core/cache'
 import { isoDate } from '@/utils/date'
 import {
   MenuCallback,
@@ -158,7 +159,15 @@ export async function addTransaction(
 
     if (postAction === `${PostSaveCallback.UNDO_PREFIX}${createdId}`) {
       try {
-        await conversation.external(() => deleteTransaction(createdId))
+        await conversation.external(() => {
+          invalidateCache(
+            CACHE_KEYS.RECENT_TRANSACTIONS,
+            CACHE_KEYS.CATEGORY_FREQUENCY,
+            CACHE_KEYS.PAYEES
+          )
+
+          return deleteTransaction(createdId)
+        })
       } catch (error) {
         logger.error('[addTransaction] deleteTransaction failed', error)
         await ctx.api.editMessageText(

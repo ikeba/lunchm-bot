@@ -1,13 +1,13 @@
-import { withCache, TTL_1D } from '@/core/cache'
+import { withCache, TTL_1D, CACHE_KEYS } from '@/core/cache'
 import { apiClient } from '@/core/httpClient'
 import { isoDate } from '@/utils/date'
 import { TransactionSchema } from './types/types'
 
 const EXCLUDED_PAYEE = ['[No Payee]', 'Added To EUR', 'Transfer']
 
-export function getTopPayees(force = false): Promise<string[]> {
+export function getTopPayees(): Promise<string[]> {
   return withCache(
-    'payees',
+    CACHE_KEYS.PAYEES,
     async () => {
       const data = await apiClient.get<{ transactions: unknown[] }>(
         `/transactions?limit=500&start_date=${isoDate(-90)}&end_date=${isoDate(1)}`
@@ -38,6 +38,6 @@ export function getTopPayees(force = false): Promise<string[]> {
         .slice(0, 100)
         .map(([payee]) => payee)
     },
-    { ttl: TTL_1D, force }
+    { ttl: TTL_1D }
   )
 }
