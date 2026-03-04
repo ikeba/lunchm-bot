@@ -17,14 +17,15 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const ms = Date.now() - start
 
   const rawBody = await res.text().catch(() => '')
-  const preview = rawBody.length > 200 ? `${rawBody.slice(0, 200)}…` : rawBody
 
   if (!res.ok) {
-    logger.error(`[http] ${method} ${path} → ${res.status} ${ms}ms`, preview)
+    logger.error(`[http] ${method} ${path} → ${res.status} ${ms}ms`, rawBody)
     throw new Error(`Lunch Money API error: ${res.status} ${res.statusText}`)
   }
 
-  logger.info(`[http] ${method} ${path} → ${res.status} ${ms}ms`, preview)
+  if (method !== 'GET') {
+    logger.info(`[http] ${method} ${path} → ${res.status} ${ms}ms`, rawBody)
+  }
 
   return JSON.parse(rawBody) as T
 }

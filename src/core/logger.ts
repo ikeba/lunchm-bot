@@ -38,7 +38,7 @@ async function readExisting(path: string): Promise<string> {
 function format(level: Level, message: string, extra?: unknown): string {
   const suffix =
     extra !== undefined
-      ? ` | ${extra instanceof Error ? (extra.stack ?? extra.message) : JSON.stringify(extra)}`
+      ? ` | ${extra instanceof Error ? (extra.stack ?? extra.message) : typeof extra === 'string' ? extra : JSON.stringify(extra)}`
       : ''
 
   return `[${timestamp()}] [${level.toUpperCase()}] ${message}${suffix}`
