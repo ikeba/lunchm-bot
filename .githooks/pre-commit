@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+# Auto-bump patch version unless package.json is already staged
+if git diff --cached --name-only | grep -q '^package\.json$'; then
+  exit 0
+fi
+
+# Bump patch version in package.json
+current=$(grep -o '"version": "[^"]*"' package.json | grep -o '[0-9]*\.[0-9]*\.[0-9]*')
+major=$(echo "$current" | cut -d. -f1)
+minor=$(echo "$current" | cut -d. -f2)
+patch=$(echo "$current" | cut -d. -f3)
+new_version="$major.$minor.$((patch + 1))"
+
+sed -i '' "s/\"version\": \"$current\"/\"version\": \"$new_version\"/" package.json
+git add package.json
+
+echo "Auto-bumped version: $current → $new_version"
