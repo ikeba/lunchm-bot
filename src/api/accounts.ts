@@ -1,13 +1,13 @@
 import { withCache, TTL_1W, CACHE_KEYS } from '@/core/cache'
 import { apiClient } from '@/core/httpClient'
 import { AccountSchema } from './types/types'
-import type { Account } from './types/types'
+import type { Account, AccountsApiResponse } from './types/types'
 
 export function getAccounts(): Promise<Account[]> {
   return withCache(
     CACHE_KEYS.ACCOUNTS,
     async () => {
-      const data = await apiClient.get<{ manual_accounts: unknown[] }>(
+      const data = await apiClient.get<AccountsApiResponse>(
         '/manual_accounts'
       )
 

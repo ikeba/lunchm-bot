@@ -1,6 +1,7 @@
 import type { FlowContext, TransactionDraft } from '../flowContext'
 import { restorePreview } from '../preview'
 import { backKeyboard } from '@/bot/keyboards'
+import { safeDelete } from '@/utils/telegram'
 
 type TextField = Extract<keyof TransactionDraft, 'payee' | 'notes'>
 
@@ -22,9 +23,7 @@ export async function pickTextInput(
 
     flow.draft[field] = text === '/skip' ? undefined : text
 
-    await flow.ctx.api
-      .deleteMessage(flow.chatId, event.message.message_id)
-      .catch(() => {})
+    await safeDelete(flow.ctx.api, flow.chatId, event.message.message_id)
   }
 
   await restorePreview(flow)

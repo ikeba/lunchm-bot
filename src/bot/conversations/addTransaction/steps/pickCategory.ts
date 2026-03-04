@@ -1,5 +1,6 @@
 import type { Category } from '@/api/types/types'
 import type { FlowContext, FlowData } from '../flowContext'
+import { safeDelete } from '@/utils/telegram'
 import { getCategoryFrequency } from '@/api/transactions'
 import { categoryKeyboard, CATEGORY_PAGE_SIZE } from '@/bot/keyboards/category'
 import {
@@ -91,7 +92,9 @@ export async function pickCategory(
   async function render(filtered: Category[], text: string): Promise<void> {
     const totalPages = Math.ceil(filtered.length / CATEGORY_PAGE_SIZE) || 1
     const filter = text || undefined
-    const label = wideText(text ? `Select category (🔍 "${text}"):` : 'Select category:')
+    const label = wideText(
+      text ? `Select category (🔍 "${text}"):` : 'Select category:'
+    )
 
     await flow.ctx.api.editMessageText(flow.chatId, flow.msgId, label, {
       reply_markup: categoryKeyboard(
@@ -112,9 +115,7 @@ export async function pickCategory(
     if (update.message?.text) {
       filterText = update.message.text.trim()
       page = 0
-      await flow.ctx.api
-        .deleteMessage(flow.chatId, update.message.message_id)
-        .catch(() => {})
+      await safeDelete(flow.ctx.api, flow.chatId, update.message.message_id)
       await render(getFiltered(filterText), filterText)
       continue
     }

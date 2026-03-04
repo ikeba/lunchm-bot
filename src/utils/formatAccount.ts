@@ -1,10 +1,21 @@
 import type { Account } from '@/api/types/types'
 
+const NUMBER_FORMAT = new Intl.NumberFormat('en-US', {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+})
+
 export function formatAccount(a: Account): string {
   const balance = a.balance != null ? `${a.balance} ${a.currency}` : 'N/A'
   const institution = a.institution_name ? ` (${a.institution_name})` : ''
 
   return `${a.name}${institution}: ${balance}`
+}
+
+export function formatCurrency(amount: number, currency: string): string {
+  const formatted = NUMBER_FORMAT.format(amount).replace(/,/g, ' ')
+
+  return `${formatted} ${currency.toUpperCase()}`
 }
 
 function formatBalance(
@@ -15,15 +26,7 @@ function formatBalance(
     return 'N/A'
   }
 
-  const num = Number.parseFloat(balance)
-  const formatter = new Intl.NumberFormat('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })
-
-  const formatted = formatter.format(num).replace(/,/g, ' ')
-
-  return `${formatted} ${currency.toUpperCase()}`
+  return formatCurrency(Number.parseFloat(balance), currency)
 }
 
 export function formatAccountList(accounts: Account[]): string {

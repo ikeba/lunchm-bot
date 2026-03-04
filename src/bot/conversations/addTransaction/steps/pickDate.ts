@@ -15,7 +15,9 @@ async function pickDateManual(flow: FlowContext): Promise<void> {
   await flow.ctx.api.editMessageText(
     flow.chatId,
     flow.msgId,
-    wideText(`📅 Enter date (YYYY-MM-DD):\nCurrent: <code>${flow.draft.date}</code>`),
+    wideText(
+      `📅 Enter date (YYYY-MM-DD):\nCurrent: <code>${flow.draft.date}</code>`
+    ),
     { parse_mode: 'HTML', reply_markup: backKeyboard() }
   )
 

@@ -1,5 +1,6 @@
 import type { Bot } from 'grammy'
 import type { MyContext } from '@/types/context'
+import { escapeHtml } from '@/utils/text'
 
 const LOG_DIR = 'data/logs'
 const LINES = 50
@@ -28,10 +29,11 @@ export function registerLogsCommand(bot: Bot<MyContext>): void {
 
     if (!tail) {
       await ctx.reply('No logs for today yet.')
+
       return
     }
 
-    const escaped = tail.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    const escaped = escapeHtml(tail)
 
     await ctx.reply(`<pre>${escaped}</pre>`, { parse_mode: 'HTML' })
   })
