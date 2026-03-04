@@ -31,6 +31,8 @@ export function registerLogsCommand(bot: Bot<MyContext>): void {
       return
     }
 
-    await ctx.reply(`<pre>${tail}</pre>`, { parse_mode: 'HTML' })
+    const escaped = tail.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
+    await ctx.reply(`<pre>${escaped}</pre>`, { parse_mode: 'HTML' })
   })
 }
