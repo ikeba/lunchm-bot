@@ -3,7 +3,7 @@ import { apiClient } from '@/core/httpClient'
 import { CategorySchema } from './types/types'
 import type { Category } from './types/types'
 
-export function getCategories(): Promise<Category[]> {
+export function getCategories(force = false): Promise<Category[]> {
   return withCache(
     'categories',
     async () => {
@@ -15,6 +15,6 @@ export function getCategories(): Promise<Category[]> {
         .map(c => CategorySchema.parse(c))
         .filter(c => !c.archived && !c.is_group)
     },
-    { ttl: TTL_1W }
+    { ttl: TTL_1W, force }
   )
 }

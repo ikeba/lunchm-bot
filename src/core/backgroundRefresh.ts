@@ -7,8 +7,8 @@ import { logger } from '@/core/logger'
 export function backgroundRefresh(force = false): void {
   try {
     Promise.all([
-      getCategories(),
-      getCurrencies(),
+      getCategories(force),
+      getCurrencies(force),
       getCategoryFrequency(force),
       getRecentTransactions(force),
       getTopPayees(force),

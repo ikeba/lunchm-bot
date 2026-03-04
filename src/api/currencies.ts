@@ -2,7 +2,7 @@ import { withCache, TTL_1W } from '@/core/cache'
 import { getAccounts } from './accounts'
 import { getMe } from './me'
 
-export function getCurrencies(): Promise<string[]> {
+export function getCurrencies(force = false): Promise<string[]> {
   return withCache(
     'currencies',
     async () => {
@@ -17,6 +17,6 @@ export function getCurrencies(): Promise<string[]> {
 
       return [...seen]
     },
-    { ttl: TTL_1W }
+    { ttl: TTL_1W, force }
   )
 }
