@@ -3,6 +3,7 @@ import { restorePreview } from '../preview'
 import { backKeyboard, datePicker } from '@/bot/keyboards'
 import { DateCallback } from '@/bot/constants/callbacks'
 import { isoDate } from '@/utils/date'
+import { safeDelete } from '@/utils/telegram'
 import { wideText } from '@/utils/text'
 
 const QUICK_PICKS: Record<string, number> = {
@@ -28,12 +29,18 @@ async function pickDateManual(flow: FlowContext): Promise<void> {
   } else if (event.message?.text) {
     const text = event.message.text.trim()
 
+    await safeDelete(flow.ctx.api, flow.chatId, event.message.message_id)
+
     if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
       flow.draft.date = text
     } else {
-      await flow.ctx.reply(
-        '⚠️ Invalid format, expected YYYY-MM-DD. Date not changed.'
-      )
+      await flow.ctx.api
+        .editMessageText(
+          flow.chatId,
+          flow.msgId,
+          '⚠️ Invalid format, expected YYYY-MM-DD. Date not changed.'
+        )
+        .catch(() => {})
     }
   }
 

@@ -2,21 +2,33 @@ import { getRecentTransactions } from '@/api/transactions'
 import { formatTransactionList } from '@/utils/formatTransaction'
 import type { MyContext } from '@/types/context'
 import { backToMenuKeyboard } from '@/bot/keyboards'
-import { safeDelete } from '@/utils/telegram'
+import { getActiveMsgId } from '@/bot/state'
 
 export async function handleListTransactions(ctx: MyContext): Promise<void> {
-  const loadingMsg = await ctx.reply('Fetching recent transactions...')
+  const chatId = ctx.chat!.id
+  const msgId = getActiveMsgId()!
+
+  await ctx.api
+    .editMessageText(chatId, msgId, 'Fetching recent transactions...')
+    .catch(() => {})
 
   try {
     const transactions = await getRecentTransactions()
 
-    await safeDelete(ctx.api, loadingMsg.chat.id, loadingMsg.message_id)
-    await ctx.reply(formatTransactionList(transactions), {
-      parse_mode: 'HTML',
-      reply_markup: backToMenuKeyboard(),
-    })
+    await ctx.api.editMessageText(
+      chatId,
+      msgId,
+      formatTransactionList(transactions),
+      {
+        parse_mode: 'HTML',
+        reply_markup: backToMenuKeyboard(),
+      }
+    )
   } catch (e) {
-    await safeDelete(ctx.api, loadingMsg.chat.id, loadingMsg.message_id)
-    await ctx.reply(`Error: ${e}`, { reply_markup: backToMenuKeyboard() })
+    await ctx.api
+      .editMessageText(chatId, msgId, `Error: ${e}`, {
+        reply_markup: backToMenuKeyboard(),
+      })
+      .catch(() => {})
   }
 }

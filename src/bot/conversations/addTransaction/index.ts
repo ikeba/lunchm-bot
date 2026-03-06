@@ -7,11 +7,11 @@ import { deleteTransaction } from '@/api/transactions'
 import type { MyContext } from '@/types/context'
 import { backToMenuKeyboard, previewKeyboard } from '@/bot/keyboards'
 import { MENU_KEYBOARD, MENU_TEXT } from '@/bot/handlers/menu'
+import { getActiveMsgId } from '@/bot/state'
 import { getLastUsed } from '@/bot/userState'
 import { logger } from '@/core/logger'
 import { invalidateCache, CACHE_KEYS } from '@/core/cache'
 import { isoDate } from '@/utils/date'
-import { safeDelete } from '@/utils/telegram'
 import { getPendingAmount } from '@/bot/handlers/quickInput'
 import {
   MenuCallback,
@@ -68,9 +68,15 @@ export async function addTransaction(
       )
   } catch (error) {
     logger.error('[addTransaction] failed to load data', error)
-    await ctx.reply('❌ Failed to load data. Try again.', {
-      reply_markup: backToMenuKeyboard(),
-    })
+    const activeMsgId = await conversation.external(getActiveMsgId)
+
+    if (activeMsgId) {
+      await ctx.api
+        .editMessageText(chatId, activeMsgId, '❌ Failed to load data. Try again.', {
+          reply_markup: backToMenuKeyboard(),
+        })
+        .catch(() => {})
+    }
 
     return
   }
@@ -80,16 +86,13 @@ export async function addTransaction(
 
   let prefilledAmount = await conversation.external(getPendingAmount)
 
-  const del = (...ids: number[]) =>
-    Promise.all(ids.map(id => safeDelete(ctx.api, chatId, id)))
-
   while (true) {
     let amountResult: AmountResult | null
 
     if (prefilledAmount) {
-      const msg = await ctx.reply('⏳')
+      const activeMsgId = await conversation.external(getActiveMsgId)
 
-      amountResult = { amount: prefilledAmount, msgId: msg.message_id }
+      amountResult = { amount: prefilledAmount, msgId: activeMsgId! }
       prefilledAmount = undefined
     } else {
       amountResult = await pickAmount(conversation, ctx, chatId)
@@ -205,7 +208,10 @@ export async function addTransaction(
         return
       }
 
-      await del(flow.msgId)
+      await ctx.api.editMessageText(chatId, flow.msgId, MENU_TEXT, {
+        parse_mode: 'HTML',
+        reply_markup: MENU_KEYBOARD,
+      })
 
       return
     }
@@ -218,8 +224,6 @@ export async function addTransaction(
 
       return
     }
-
-    await del(flow.msgId)
 
     if (postAction === PostSaveCallback.ADD_NEW) {
       useLastUsed = false

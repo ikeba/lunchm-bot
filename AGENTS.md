@@ -118,3 +118,14 @@ When analyzing your plan, check each category:
 
 **Missing constraints**: What platform/version/environment limitations apply?
   What assumptions am I making that might be wrong?
+
+## Knowledge Capture
+
+When you discover something important during code exploration or implementation — a non-obvious constraint, a hidden dependency, a footgun, or a pattern that future-you needs to know — **you MUST add it to this file** (in the relevant section, or create a new one).
+
+Examples of what to capture:
+- grammy conversations replay gotchas you encountered
+- Non-obvious ordering requirements (e.g. "registerMenu must precede createConversation")
+- Telegram API quirks (rate limits, message edit restrictions, callback data size limits)
+- SQLite/bun:sqlite behavioral nuances
+- Anything that cost you time to figure out and would cost time again
