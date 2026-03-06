@@ -38,6 +38,7 @@ export const DateCallback = {
 export const PreviewCallback = {
   CONFIRM: 'confirm',
   CANCEL: 'cancel',
+  EDIT_AMOUNT: 'edit:amount',
   EDIT_ACCOUNT: 'edit:account',
   EDIT_CATEGORY: 'edit:category',
   EDIT_DATE: 'edit:date',
@@ -53,7 +54,6 @@ export const PayeeCallback = {
 } as const
 
 export const PostSaveCallback = {
-  ADD_SIMILAR: 'add_similar',
   ADD_NEW: 'add_new',
   UNDO_PREFIX: 'undo:',
 } as const

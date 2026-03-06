@@ -4,6 +4,7 @@ import type { MyContext } from '@/types/context'
 import { handleBalance } from './balance'
 import { handleListTransactions } from './listTransactions'
 import { backgroundRefresh } from '@/core/backgroundRefresh'
+import { setQuickInputEnabled } from './quickInput'
 import { version } from '../../../package.json'
 import { wideText } from '@/utils/text'
 
@@ -56,6 +57,7 @@ export function registerMenuCallbacks(bot: Bot<MyContext>): void {
 
   bot.callbackQuery(Actions.TransactionsList, async ctx => {
     await ctx.answerCallbackQuery()
+    setQuickInputEnabled(false)
     await handleListTransactions(ctx)
 
     await ctx.deleteMessage().catch(() => {})
@@ -63,6 +65,7 @@ export function registerMenuCallbacks(bot: Bot<MyContext>): void {
 
   bot.callbackQuery(Actions.AccountsList, async ctx => {
     await ctx.answerCallbackQuery()
+    setQuickInputEnabled(false)
     await handleBalance(ctx)
 
     await ctx.deleteMessage().catch(() => {})
@@ -70,6 +73,7 @@ export function registerMenuCallbacks(bot: Bot<MyContext>): void {
 
   bot.callbackQuery('menu:back', async ctx => {
     await ctx.answerCallbackQuery()
+    setQuickInputEnabled(true)
     await ctx.editMessageText(MENU_TEXT, {
       parse_mode: 'HTML',
       reply_markup: MENU_KEYBOARD,

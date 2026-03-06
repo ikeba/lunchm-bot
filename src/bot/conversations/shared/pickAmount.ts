@@ -1,6 +1,7 @@
 import type { MyContext } from '@/types/context'
 import { backToMenuKeyboard } from '@/bot/keyboards'
 import { MENU_KEYBOARD, MENU_TEXT } from '@/bot/handlers/menu'
+import { parseAmount } from '@/utils/amount'
 import { safeDelete } from '@/utils/telegram'
 import type { Conv } from './types'
 
@@ -46,11 +47,11 @@ export async function pickAmount(
       continue
     }
 
-    const raw = event.message.text.trim().replace(',', '.')
-
     await safeDelete(ctx.api, chatId, event.message.message_id)
 
-    if (Number.isNaN(Number.parseFloat(raw))) {
+    const amount = parseAmount(event.message.text)
+
+    if (amount === null) {
       await ctx.api
         .editMessageText(chatId, promptMsg.message_id, promptRetry, {
           reply_markup: backToMenuKeyboard(),
@@ -60,7 +61,7 @@ export async function pickAmount(
     }
 
     return {
-      amount: Number.parseFloat(raw).toFixed(2),
+      amount,
       msgId: promptMsg.message_id,
     }
   }

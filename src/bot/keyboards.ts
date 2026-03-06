@@ -17,6 +17,8 @@ export function previewKeyboard(): InlineKeyboard {
   return new InlineKeyboard()
     .text('✅ Confirm', PreviewCallback.CONFIRM)
     .row()
+    .text('💰 Edit Amount', PreviewCallback.EDIT_AMOUNT)
+    .row()
     .text('🏦 Edit Account', PreviewCallback.EDIT_ACCOUNT)
     .text('🏷 Edit Category', PreviewCallback.EDIT_CATEGORY)
     .row()
@@ -32,6 +34,8 @@ export function previewKeyboard(): InlineKeyboard {
 export function afterSaveKeyboard(transactionId: number): InlineKeyboard {
   return new InlineKeyboard()
     .text('Undo', `${PostSaveCallback.UNDO_PREFIX}${transactionId}`)
+    .row()
+    .text('➕ New', PostSaveCallback.ADD_NEW)
     .row()
     .text('← Menu', MenuCallback.BACK)
 }
