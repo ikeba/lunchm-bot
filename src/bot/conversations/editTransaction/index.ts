@@ -12,6 +12,7 @@ import {
 } from '@/bot/keyboards'
 import { handleListTransactions } from '@/bot/handlers/listTransactions'
 import { getActiveMsgId, consumePendingEditTransactionId } from '@/bot/state'
+import { formatAmount } from '@/utils/amount'
 import { logger } from '@/core/logger'
 import { invalidateCache, CACHE_KEYS } from '@/core/cache'
 import { backgroundRefresh } from '@/core/backgroundRefresh'
@@ -74,7 +75,7 @@ export async function editTransaction(
     )
 
     draft = {
-      amount: transaction.amount,
+      amount: formatAmount(transaction.amount),
       currency: transaction.currency,
       manualAccountId: transaction.account_id ?? undefined,
       accountName: account?.name,
