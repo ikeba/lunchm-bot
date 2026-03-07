@@ -28,22 +28,29 @@ function groupByDate(transactions: Transaction[]): Map<string, Transaction[]> {
   }, new Map<string, Transaction[]>())
 }
 
-function formatDayGroup(date: string, transactions: Transaction[]): string {
+function formatDayGroup(
+  date: string,
+  transactions: Transaction[],
+  startNumber: number
+): string {
   const amountColumns = transactions.map(t =>
     formatAmountWithCurrency(t.amount, t.currency)
   )
   const payeeColumns = transactions.map(t => escapeHtml(t.payee ?? '—'))
 
+  const maxNumberLen = String(startNumber + transactions.length - 1).length
   const maxAmountLen = Math.max(...amountColumns.map(s => s.length))
   const maxPayeeLen = Math.max(...payeeColumns.map(s => s.length))
 
-  const header = `<b>${'Amount'.padStart(maxAmountLen)}</b> | <b>${'Payee'.padEnd(maxPayeeLen)}</b>`
+  const numberPad = ' '.repeat(maxNumberLen + 2)
+  const header = `${numberPad}<b>${'Amount'.padStart(maxAmountLen)}</b> | <b>${'Payee'.padEnd(maxPayeeLen)}</b>`
 
   const rows = transactions.map((_, i) => {
+    const number = String(startNumber + i).padStart(maxNumberLen)
     const amount = amountColumns[i].padStart(maxAmountLen)
     const payee = payeeColumns[i].padEnd(maxPayeeLen)
 
-    return `${amount} | ${payee}`
+    return `${number}. ${amount} | ${payee}`
   })
 
   const table = [header, ...rows].join('\n')
@@ -51,17 +58,29 @@ function formatDayGroup(date: string, transactions: Transaction[]): string {
   return `📅 <b>${date}</b>\n<pre>${table}</pre>`
 }
 
-export function formatTransactionList(transactions: Transaction[]): string {
+export function formatTransactionList(transactions: Transaction[]): {
+  text: string
+  sorted: Transaction[]
+} {
   const filtered = transactions.filter(t => !isZeroAmount(t.amount))
 
   if (filtered.length === 0) {
-    return 'No transactions found.'
+    return { text: 'No transactions found.', sorted: [] }
   }
 
   const byDate = groupByDate(filtered)
   const sortedDates = [...byDate.keys()].sort((a, b) => a.localeCompare(b))
+  const sorted = sortedDates.flatMap(date => byDate.get(date)!)
 
-  return sortedDates
-    .map(date => formatDayGroup(date, byDate.get(date)!))
-    .join('\n\n')
+  let counter = 1
+  const sections = sortedDates.map(date => {
+    const group = byDate.get(date)!
+    const section = formatDayGroup(date, group, counter)
+
+    counter += group.length
+
+    return section
+  })
+
+  return { text: sections.join('\n\n'), sorted }
 }

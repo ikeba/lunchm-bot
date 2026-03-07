@@ -1,22 +1,22 @@
 import { InlineKeyboard } from 'grammy'
-import type { Account } from '@/api/types/types'
+import type { Account, Transaction } from '@/api/types/types'
 import {
   AccountCallback,
   CommonCallback,
   CurrencyCallback,
   DateCallback,
+  EditPreviewCallback,
   MenuCallback,
   PostSaveCallback,
   PreviewCallback,
+  TransactionListCallback,
   TransferCallback,
 } from '@/bot/constants/callbacks'
 
 export { categoryKeyboard, CATEGORY_PAGE_SIZE } from '@/bot/keyboards/category'
 
-export function previewKeyboard(): InlineKeyboard {
-  return new InlineKeyboard()
-    .text('✅ Confirm', PreviewCallback.CONFIRM)
-    .row()
+function addEditFieldRows(kb: InlineKeyboard): InlineKeyboard {
+  return kb
     .text('🏷 Category', PreviewCallback.EDIT_CATEGORY)
     .text('👤 Payee', PreviewCallback.EDIT_PAYEE)
     .row()
@@ -28,7 +28,14 @@ export function previewKeyboard(): InlineKeyboard {
     .row()
     .text('💱 Currency', PreviewCallback.EDIT_CURRENCY)
     .row()
-    .text('❌ Cancel', PreviewCallback.CANCEL)
+}
+
+export function previewKeyboard(): InlineKeyboard {
+  const kb = new InlineKeyboard()
+    .text('✅ Confirm', PreviewCallback.CONFIRM)
+    .row()
+
+  return addEditFieldRows(kb).text('❌ Cancel', PreviewCallback.CANCEL)
 }
 
 export function afterSaveKeyboard(transactionId: number): InlineKeyboard {
@@ -42,6 +49,12 @@ export function afterSaveKeyboard(transactionId: number): InlineKeyboard {
 
 export function backToMenuKeyboard(): InlineKeyboard {
   return new InlineKeyboard().text('← Menu', MenuCallback.BACK)
+}
+
+export function backToListKeyboard(): InlineKeyboard {
+  return new InlineKeyboard()
+    .text('← List', TransactionListCallback.BACK_TO_LIST)
+    .text('← Menu', MenuCallback.BACK)
 }
 
 /** Back button — shown below text prompts (payee, note) */
@@ -95,6 +108,49 @@ export function transferPreviewKeyboard(): InlineKeyboard {
     .text('💱 Edit Currency', TransferCallback.EDIT_CURRENCY)
     .row()
     .text('❌ Cancel', TransferCallback.CANCEL)
+}
+
+export function editPreviewKeyboard(): InlineKeyboard {
+  const kb = new InlineKeyboard()
+    .text('💾 Save', EditPreviewCallback.SAVE)
+    .text('🗑 Delete', EditPreviewCallback.DELETE)
+    .row()
+
+  return addEditFieldRows(kb).text('❌ Cancel', PreviewCallback.CANCEL)
+}
+
+export function deleteConfirmKeyboard(): InlineKeyboard {
+  return new InlineKeyboard()
+    .text('Yes, delete', EditPreviewCallback.DELETE_CONFIRM)
+    .text('↩ Back', EditPreviewCallback.DELETE_CANCEL)
+}
+
+function truncate(text: string, maxLength: number): string {
+  return text.length <= maxLength ? text : `${text.slice(0, maxLength - 1)}…`
+}
+
+export function transactionListKeyboard(
+  transactions: Transaction[]
+): InlineKeyboard {
+  const kb = new InlineKeyboard()
+
+  transactions.forEach((transaction, index) => {
+    kb.text(
+      String(index + 1),
+      `${TransactionListCallback.SELECT_PREFIX}${transaction.id}`
+    )
+    if ((index + 1) % 8 === 0) {
+      kb.row()
+    }
+  })
+
+  if (transactions.length % 8 !== 0) {
+    kb.row()
+  }
+
+  kb.text('← Menu', MenuCallback.BACK)
+
+  return kb
 }
 
 export function accountKeyboard(

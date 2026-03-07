@@ -1,13 +1,9 @@
-import { getAccounts } from '@/api/accounts'
-import { getCategories } from '@/api/categories'
-import { getCurrencies } from '@/api/currencies'
 import { getMe } from '@/api/me'
-import { getCategoryPayeeMap, getTopPayees } from '@/api/payees'
 import { deleteTransaction } from '@/api/transactions'
 import type { MyContext } from '@/types/context'
 import { backToMenuKeyboard, previewKeyboard } from '@/bot/keyboards'
 import { showMenu } from '@/bot/handlers/menu'
-import { getActiveMsgId, getPendingAmount } from '@/bot/state'
+import { getActiveMsgId, consumePendingAmount } from '@/bot/state'
 import { getLastUsed } from '@/bot/userState'
 import { logger } from '@/core/logger'
 import { invalidateCache, CACHE_KEYS } from '@/core/cache'
@@ -17,30 +13,18 @@ import {
   PostSaveCallback,
   PreviewCallback,
 } from '@/bot/constants/callbacks'
-import type { Conv } from '../shared/types'
-import type { FlowContext, FlowData, TransactionDraft } from './flowContext'
-import { renderPreview, restorePreview } from './preview'
-import { pickAccount } from './steps/pickAccount'
-import { pickCategory } from './steps/pickCategory'
-import { pickCurrency } from './steps/pickCurrency'
-import { pickDate } from './steps/pickDate'
-import { pickPayee } from './steps/pickPayee'
-import type { AmountResult } from '../shared/pickAmount'
-import { pickAmount } from '../shared/pickAmount'
-import { pickNotes } from './steps/pickNotes'
-import { editAmount } from './steps/editAmount'
+import type { Conv } from '@/bot/conversations/shared/types'
+import { loadFlowData } from '@/bot/conversations/shared/loadFlowData'
+import { waitForEditAction } from '@/bot/conversations/shared/editLoop'
+import type {
+  FlowContext,
+  FlowData,
+  TransactionDraft,
+} from '@/bot/conversations/shared/flowContext'
+import { renderPreview } from './preview'
+import type { AmountResult } from '@/bot/conversations/shared/pickAmount'
+import { pickAmount } from '@/bot/conversations/shared/pickAmount'
 import { saveTransaction } from './steps/saveTransaction'
-
-type StepHandler = (flow: FlowContext, data: FlowData) => Promise<void>
-
-const EDIT_STEPS: Record<string, StepHandler> = {
-  [PreviewCallback.EDIT_AMOUNT]: editAmount,
-  [PreviewCallback.EDIT_ACCOUNT]: pickAccount,
-  [PreviewCallback.EDIT_CURRENCY]: pickCurrency,
-  [PreviewCallback.EDIT_DATE]: pickDate,
-  [PreviewCallback.EDIT_PAYEE]: pickPayee,
-  [PreviewCallback.EDIT_NOTE]: pickNotes,
-}
 
 export async function addTransaction(
   conversation: Conv,
@@ -48,25 +32,12 @@ export async function addTransaction(
 ): Promise<void> {
   const chatId = ctx.chat!.id
 
-  let currencies: string[]
-  let accounts: Awaited<ReturnType<typeof getAccounts>>
-  let categories: Awaited<ReturnType<typeof getCategories>>
-  let payees: string[]
-  let categoryPayeeMap: Awaited<ReturnType<typeof getCategoryPayeeMap>>
+  let data: FlowData
   let me: Awaited<ReturnType<typeof getMe>>
 
   try {
-    ;[currencies, accounts, categories, payees, categoryPayeeMap, me] =
-      await conversation.external(() =>
-        Promise.all([
-          getCurrencies(),
-          getAccounts(),
-          getCategories(),
-          getTopPayees(),
-          getCategoryPayeeMap(),
-          getMe(),
-        ])
-      )
+    data = await loadFlowData(conversation)
+    me = await conversation.external(getMe)
   } catch (error) {
     logger.error('[addTransaction] failed to load data', error)
     const activeMsgId = await conversation.external(getActiveMsgId)
@@ -87,15 +58,7 @@ export async function addTransaction(
     return
   }
 
-  const data: FlowData = {
-    currencies,
-    accounts,
-    categories,
-    payees,
-    categoryPayeeMap,
-  }
-
-  let prefilledAmount = await conversation.external(getPendingAmount)
+  let prefilledAmount = await conversation.external(consumePendingAmount)
 
   while (true) {
     let amountResult: AmountResult | null
@@ -146,10 +109,7 @@ export async function addTransaction(
     let confirmed = false
 
     while (!confirmed) {
-      const cb = await conversation.waitFor('callback_query:data')
-
-      await cb.answerCallbackQuery()
-      const action = cb.callbackQuery.data
+      const action = await waitForEditAction(flow, data)
 
       if (action === PreviewCallback.CONFIRM) {
         confirmed = true
@@ -160,24 +120,6 @@ export async function addTransaction(
         await showMenu(ctx.api, chatId, flow.msgId)
 
         return
-      }
-
-      if (action === PreviewCallback.EDIT_CATEGORY) {
-        const selection = await pickCategory(flow, data)
-
-        if (selection !== null) {
-          draft.categoryId = selection.categoryId
-          draft.categoryName = selection.categoryName
-        }
-
-        await restorePreview(flow)
-        continue
-      }
-
-      const handler = EDIT_STEPS[action]
-
-      if (handler) {
-        await handler(flow, data)
       }
     }
 

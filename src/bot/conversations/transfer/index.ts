@@ -1,6 +1,4 @@
 import { getAccounts } from '@/api/accounts'
-import { getCategories } from '@/api/categories'
-import { getCurrencies } from '@/api/currencies'
 import { getMe } from '@/api/me'
 import { createTransferGroup } from '@/api/transactions'
 import type { Account } from '@/api/types/types'
@@ -25,8 +23,9 @@ import { logger } from '@/core/logger'
 import { isoDate } from '@/utils/date'
 import { wideText } from '@/utils/text'
 import type { MyContext } from '@/types/context'
-import { pickAmount } from '../shared/pickAmount'
-import type { Conv } from '../shared/types'
+import { loadFlowData } from '@/bot/conversations/shared/loadFlowData'
+import { pickAmount } from '@/bot/conversations/shared/pickAmount'
+import type { Conv } from '@/bot/conversations/shared/types'
 import type { TransferDraft, TransferFlowContext } from './flowContext'
 import { renderTransferSuccess, restoreTransferPreview } from './preview'
 
@@ -205,12 +204,10 @@ export async function addTransfer(
     return
   }
 
-  const [accounts, currencies, me, categories] = await conversation.external(
-    () =>
-      Promise.all([getAccounts(), getCurrencies(), getMe(), getCategories()])
-  )
+  const data = await loadFlowData(conversation)
+  const me = await conversation.external(getMe)
 
-  const transferCategory = categories.find(
+  const transferCategory = data.categories.find(
     c => c.name.toLowerCase() === 'payment, transfer'
   )
 
@@ -232,13 +229,13 @@ export async function addTransfer(
     draft,
   }
 
-  const sourceOk = await pickSourceAccount(flow, accounts)
+  const sourceOk = await pickSourceAccount(flow, data.accounts)
 
   if (!sourceOk) {
     return
   }
 
-  const destOk = await pickDestinationAccount(flow, accounts)
+  const destOk = await pickDestinationAccount(flow, data.accounts)
 
   if (!destOk) {
     return
@@ -263,12 +260,14 @@ export async function addTransfer(
     } else if (action === TransferCallback.EDIT_DATE) {
       await editDate(flow)
     } else if (action === TransferCallback.EDIT_CURRENCY) {
-      await editCurrency(flow, currencies)
+      await editCurrency(flow, data.currencies)
     }
   }
 
-  const beforeSource = accounts.find(a => a.id === draft.sourceAccountId)
-  const beforeDest = accounts.find(a => a.id === draft.destinationAccountId)
+  const beforeSource = data.accounts.find(a => a.id === draft.sourceAccountId)
+  const beforeDest = data.accounts.find(
+    a => a.id === draft.destinationAccountId
+  )
 
   try {
     await conversation.external(() =>

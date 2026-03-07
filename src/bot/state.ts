@@ -1,31 +1,53 @@
-let activeMsgId: number | undefined
-let pendingAmount: string | undefined
-let quickInputEnabled = true
+interface BotState {
+  activeMsgId: number | undefined
+  pendingAmount: string | undefined
+  pendingEditTransactionId: number | undefined
+  quickInputEnabled: boolean
+}
+
+const state: BotState = {
+  activeMsgId: undefined,
+  pendingAmount: undefined,
+  pendingEditTransactionId: undefined,
+  quickInputEnabled: true,
+}
 
 export function getActiveMsgId(): number | undefined {
-  return activeMsgId
+  return state.activeMsgId
 }
 
 export function setActiveMsgId(id: number | undefined): void {
-  activeMsgId = id
+  state.activeMsgId = id
 }
 
-export function getPendingAmount(): string | undefined {
-  const amount = pendingAmount
+export function consumePendingAmount(): string | undefined {
+  const value = state.pendingAmount
 
-  pendingAmount = undefined
+  state.pendingAmount = undefined
 
-  return amount
+  return value
 }
 
 export function setPendingAmount(amount: string): void {
-  pendingAmount = amount
+  state.pendingAmount = amount
+}
+
+export function consumePendingEditTransactionId(): number | undefined {
+  const value = state.pendingEditTransactionId
+
+  state.pendingEditTransactionId = undefined
+
+  return value
+}
+
+export function setPendingEditTransaction(id: number): void {
+  state.pendingEditTransactionId = id
 }
 
 export function isQuickInputEnabled(): boolean {
-  return quickInputEnabled
+  return state.quickInputEnabled
 }
 
 export function setQuickInputEnabled(value: boolean): void {
-  quickInputEnabled = value
+  state.quickInputEnabled = value
 }

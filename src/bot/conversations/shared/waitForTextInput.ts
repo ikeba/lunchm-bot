@@ -1,4 +1,4 @@
-import type { FlowContext } from '../addTransaction/flowContext'
+import type { FlowContext } from './flowContext'
 import { backKeyboard } from '@/bot/keyboards'
 import { safeDelete } from '@/utils/telegram'
 

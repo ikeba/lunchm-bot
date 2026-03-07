@@ -82,6 +82,18 @@ export async function createTransaction(
   return TransactionSchema.parse(data.transactions[0])
 }
 
+export async function updateTransaction(
+  id: number,
+  transaction: Partial<NewTransaction>
+): Promise<Transaction> {
+  const data = await apiClient.put<Transaction>(
+    `/transactions/${id}`,
+    transaction
+  )
+
+  return TransactionSchema.parse(data)
+}
+
 export async function deleteTransaction(id: number): Promise<void> {
   await apiClient.delete(`/transactions/${id}`)
 }

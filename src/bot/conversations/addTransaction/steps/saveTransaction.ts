@@ -1,4 +1,4 @@
-import type { FlowContext } from '../flowContext'
+import type { FlowContext } from '@/bot/conversations/shared/flowContext'
 import { renderPreview } from '../preview'
 import { renderSaveSummary } from '../summary'
 import type { SummaryData } from '../summary'

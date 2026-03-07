@@ -1,8 +1,11 @@
-import type { FlowContext, FlowData } from '../flowContext'
+import type {
+  FlowContext,
+  FlowData,
+} from '@/bot/conversations/shared/flowContext'
 import { restorePreview } from '../preview'
 import { backKeyboard } from '@/bot/keyboards'
 import { parseAmount } from '@/utils/amount'
-import { waitForTextInput } from '../../shared/waitForTextInput'
+import { waitForTextInput } from '@/bot/conversations/shared/waitForTextInput'
 
 export async function editAmount(
   flow: FlowContext,
