@@ -1,48 +1,57 @@
 import type { Transaction } from '@/api/types/types'
 
-let activeMsgId: number | undefined
-let pendingAmount: string | undefined
-let pendingEditTransaction: Transaction | undefined
-let quickInputEnabled = true
+interface BotState {
+  activeMsgId: number | undefined
+  pendingAmount: string | undefined
+  pendingEditTransaction: Transaction | undefined
+  quickInputEnabled: boolean
+}
+
+const state: BotState = {
+  activeMsgId: undefined,
+  pendingAmount: undefined,
+  pendingEditTransaction: undefined,
+  quickInputEnabled: true,
+}
 
 export function getActiveMsgId(): number | undefined {
-  return activeMsgId
+  return state.activeMsgId
 }
 
 export function setActiveMsgId(id: number | undefined): void {
-  activeMsgId = id
+  state.activeMsgId = id
 }
 
-export function getPendingAmount(): string | undefined {
-  const amount = pendingAmount
+export function consumePendingAmount(): string | undefined {
+  const value = state.pendingAmount
 
-  pendingAmount = undefined
+  state.pendingAmount = undefined
 
-  return amount
+  return value
 }
 
 export function setPendingAmount(amount: string): void {
-  pendingAmount = amount
+  state.pendingAmount = amount
 }
 
-export function getPendingEditTransaction(): Transaction | undefined {
-  const transaction = pendingEditTransaction
+export function consumePendingEditTransaction(): Transaction | undefined {
+  const value = state.pendingEditTransaction
 
-  pendingEditTransaction = undefined
+  state.pendingEditTransaction = undefined
 
-  return transaction
+  return value
 }
 
 export function setPendingEditTransaction(
   transaction: Transaction | undefined
 ): void {
-  pendingEditTransaction = transaction
+  state.pendingEditTransaction = transaction
 }
 
 export function isQuickInputEnabled(): boolean {
-  return quickInputEnabled
+  return state.quickInputEnabled
 }
 
 export function setQuickInputEnabled(value: boolean): void {
-  quickInputEnabled = value
+  state.quickInputEnabled = value
 }

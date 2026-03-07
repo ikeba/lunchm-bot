@@ -58,15 +58,19 @@ function formatDayGroup(
   return `📅 <b>${date}</b>\n<pre>${table}</pre>`
 }
 
-export function formatTransactionList(transactions: Transaction[]): string {
+export function formatTransactionList(transactions: Transaction[]): {
+  text: string
+  sorted: Transaction[]
+} {
   const filtered = transactions.filter(t => !isZeroAmount(t.amount))
 
   if (filtered.length === 0) {
-    return 'No transactions found.'
+    return { text: 'No transactions found.', sorted: [] }
   }
 
   const byDate = groupByDate(filtered)
   const sortedDates = [...byDate.keys()].sort((a, b) => a.localeCompare(b))
+  const sorted = sortedDates.flatMap(date => byDate.get(date)!)
 
   let counter = 1
   const sections = sortedDates.map(date => {
@@ -78,5 +82,5 @@ export function formatTransactionList(transactions: Transaction[]): string {
     return section
   })
 
-  return sections.join('\n\n')
+  return { text: sections.join('\n\n'), sorted }
 }

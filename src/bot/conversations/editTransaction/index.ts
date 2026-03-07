@@ -1,7 +1,3 @@
-import { getAccounts } from '@/api/accounts'
-import { getCategories } from '@/api/categories'
-import { getCurrencies } from '@/api/currencies'
-import { getCategoryPayeeMap, getTopPayees } from '@/api/payees'
 import { deleteTransaction, updateTransaction } from '@/api/transactions'
 import type { MyContext } from '@/types/context'
 import {
@@ -10,12 +6,13 @@ import {
   editPreviewKeyboard,
 } from '@/bot/keyboards'
 import { handleListTransactions } from '@/bot/handlers/listTransactions'
-import { getActiveMsgId, getPendingEditTransaction } from '@/bot/state'
+import { getActiveMsgId, consumePendingEditTransaction } from '@/bot/state'
 import { logger } from '@/core/logger'
 import { invalidateCache, CACHE_KEYS } from '@/core/cache'
 import { backgroundRefresh } from '@/core/backgroundRefresh'
 import { EditPreviewCallback, PreviewCallback } from '@/bot/constants/callbacks'
 import type { Conv } from '../shared/types'
+import { loadFlowData } from '../shared/loadFlowData'
 import { waitForEditAction } from '../shared/editLoop'
 import type {
   FlowContext,
@@ -29,29 +26,16 @@ export async function editTransaction(
   ctx: MyContext
 ): Promise<void> {
   const chatId = ctx.chat!.id
-  const transaction = await conversation.external(getPendingEditTransaction)
+  const transaction = await conversation.external(consumePendingEditTransaction)
 
   if (!transaction) {
     return
   }
 
-  let currencies: string[]
-  let accounts: Awaited<ReturnType<typeof getAccounts>>
-  let categories: Awaited<ReturnType<typeof getCategories>>
-  let payees: string[]
-  let categoryPayeeMap: Awaited<ReturnType<typeof getCategoryPayeeMap>>
+  let data: FlowData
 
   try {
-    ;[currencies, accounts, categories, payees, categoryPayeeMap] =
-      await conversation.external(() =>
-        Promise.all([
-          getCurrencies(),
-          getAccounts(),
-          getCategories(),
-          getTopPayees(),
-          getCategoryPayeeMap(),
-        ])
-      )
+    data = await loadFlowData(conversation)
   } catch (error) {
     logger.error('[editTransaction] failed to load data', error)
     const activeMsgId = await conversation.external(getActiveMsgId)
@@ -70,18 +54,10 @@ export async function editTransaction(
     return
   }
 
-  const data: FlowData = {
-    currencies,
-    accounts,
-    categories,
-    payees,
-    categoryPayeeMap,
-  }
-
-  const account = accounts.find(
+  const account = data.accounts.find(
     account => account.id === transaction.account_id
   )
-  const category = categories.find(
+  const category = data.categories.find(
     category => category.id === transaction.category_id
   )
 

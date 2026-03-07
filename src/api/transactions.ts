@@ -86,9 +86,10 @@ export async function updateTransaction(
   id: number,
   transaction: Partial<NewTransaction>
 ): Promise<Transaction> {
-  const data = await apiClient.put<Transaction>(`/transactions/${id}`, {
-    transaction,
-  })
+  const data = await apiClient.put<Transaction>(
+    `/transactions/${id}`,
+    transaction
+  )
 
   return TransactionSchema.parse(data)
 }

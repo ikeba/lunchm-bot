@@ -15,10 +15,8 @@ import {
 
 export { categoryKeyboard, CATEGORY_PAGE_SIZE } from '@/bot/keyboards/category'
 
-export function previewKeyboard(): InlineKeyboard {
-  return new InlineKeyboard()
-    .text('✅ Confirm', PreviewCallback.CONFIRM)
-    .row()
+function addEditFieldRows(kb: InlineKeyboard): InlineKeyboard {
+  return kb
     .text('🏷 Category', PreviewCallback.EDIT_CATEGORY)
     .text('👤 Payee', PreviewCallback.EDIT_PAYEE)
     .row()
@@ -30,7 +28,14 @@ export function previewKeyboard(): InlineKeyboard {
     .row()
     .text('💱 Currency', PreviewCallback.EDIT_CURRENCY)
     .row()
-    .text('❌ Cancel', PreviewCallback.CANCEL)
+}
+
+export function previewKeyboard(): InlineKeyboard {
+  const kb = new InlineKeyboard()
+    .text('✅ Confirm', PreviewCallback.CONFIRM)
+    .row()
+
+  return addEditFieldRows(kb).text('❌ Cancel', PreviewCallback.CANCEL)
 }
 
 export function afterSaveKeyboard(transactionId: number): InlineKeyboard {
@@ -100,22 +105,12 @@ export function transferPreviewKeyboard(): InlineKeyboard {
 }
 
 export function editPreviewKeyboard(): InlineKeyboard {
-  return new InlineKeyboard()
+  const kb = new InlineKeyboard()
     .text('💾 Save', EditPreviewCallback.SAVE)
     .text('🗑 Delete', EditPreviewCallback.DELETE)
     .row()
-    .text('🏷 Category', PreviewCallback.EDIT_CATEGORY)
-    .text('👤 Payee', PreviewCallback.EDIT_PAYEE)
-    .row()
-    .text('🏦 Account', PreviewCallback.EDIT_ACCOUNT)
-    .text('📅 Date', PreviewCallback.EDIT_DATE)
-    .row()
-    .text('💰 Amount', PreviewCallback.EDIT_AMOUNT)
-    .text('📝 Note', PreviewCallback.EDIT_NOTE)
-    .row()
-    .text('💱 Currency', PreviewCallback.EDIT_CURRENCY)
-    .row()
-    .text('❌ Cancel', PreviewCallback.CANCEL)
+
+  return addEditFieldRows(kb).text('❌ Cancel', PreviewCallback.CANCEL)
 }
 
 export function deleteConfirmKeyboard(): InlineKeyboard {
@@ -134,12 +129,12 @@ export function transactionListKeyboard(
       String(index + 1),
       `${TransactionListCallback.SELECT_PREFIX}${transaction.id}`
     )
-    if ((index + 1) % 5 === 0) {
+    if ((index + 1) % 8 === 0) {
       kb.row()
     }
   })
 
-  if (transactions.length % 5 !== 0) {
+  if (transactions.length % 8 !== 0) {
     kb.row()
   }
 
