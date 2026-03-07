@@ -33,6 +33,7 @@ export interface PagedKeyboardOptions<T> {
     item: T,
     globalIndex: number
   ) => { label: string; callback: string }
+  separatorAfterIndex?: number
   filterText?: string
   extraRows?: { label: string; callback: string }[][]
 }
@@ -43,22 +44,48 @@ export function buildPagedKeyboard<T>({
   page,
   columns = 2,
   renderButton,
+  separatorAfterIndex,
   filterText,
   extraRows = [],
 }: PagedKeyboardOptions<T>): InlineKeyboard {
   const totalPages = Math.ceil(items.length / pageSize) || 1
-  const pageItems = items.slice(page * pageSize, (page + 1) * pageSize)
+  const pageStart = page * pageSize
+  const pageItems = items.slice(pageStart, (page + 1) * pageSize)
 
-  const itemRows = chunk(pageItems, columns).map((row, rowIndex) =>
+  const itemButtons = chunk(pageItems, columns).map((row, rowIndex) =>
     row.map((item, colIndex) => {
       const { label, callback } = renderButton(
         item,
-        page * pageSize + rowIndex * columns + colIndex
+        pageStart + rowIndex * columns + colIndex
       )
 
       return InlineKeyboard.text(label, callback)
     })
   )
+
+  const itemRows: (typeof itemButtons)[number][] = []
+
+  if (
+    separatorAfterIndex != null &&
+    separatorAfterIndex >= pageStart &&
+    separatorAfterIndex < pageStart + pageItems.length - 1
+  ) {
+    const splitAfter = separatorAfterIndex - pageStart
+    let counted = 0
+    let inserted = false
+
+    for (const row of itemButtons) {
+      itemRows.push(row)
+      counted += row.length
+
+      if (!inserted && counted > splitAfter && counted < pageItems.length) {
+        itemRows.push([InlineKeyboard.text('· · ·', PageCallback.NOOP)])
+        inserted = true
+      }
+    }
+  } else {
+    itemRows.push(...itemButtons)
+  }
 
   const filterRow = filterText
     ? [[InlineKeyboard.text(`✕ Clear "${filterText}"`, FilterCallback.CLEAR)]]

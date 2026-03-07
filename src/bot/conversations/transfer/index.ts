@@ -4,7 +4,7 @@ import { getCurrencies } from '@/api/currencies'
 import { getMe } from '@/api/me'
 import { createTransferGroup } from '@/api/transactions'
 import type { Account } from '@/api/types/types'
-import { MENU_KEYBOARD, MENU_TEXT } from '@/bot/handlers/menu'
+import { showMenu } from '@/bot/handlers/menu'
 import {
   accountKeyboard,
   backKeyboard,
@@ -36,13 +36,6 @@ const QUICK_PICKS: Record<string, number> = {
   [DateCallback.TOMORROW]: 1,
 }
 
-async function exitToMenu(flow: TransferFlowContext): Promise<void> {
-  await flow.ctx.api.editMessageText(flow.chatId, flow.msgId, MENU_TEXT, {
-    parse_mode: 'HTML',
-    reply_markup: MENU_KEYBOARD,
-  })
-}
-
 async function pickSourceAccount(
   flow: TransferFlowContext,
   accounts: Account[]
@@ -60,7 +53,7 @@ async function pickSourceAccount(
   const sel = cb.callbackQuery.data
 
   if (sel === CommonCallback.BACK) {
-    await exitToMenu(flow)
+    await showMenu(flow.ctx.api, flow.chatId, flow.msgId)
 
     return false
   }
@@ -100,7 +93,7 @@ async function pickDestinationAccount(
   const sel = cb.callbackQuery.data
 
   if (sel === CommonCallback.BACK) {
-    await exitToMenu(flow)
+    await showMenu(flow.ctx.api, flow.chatId, flow.msgId)
 
     return false
   }
@@ -264,7 +257,7 @@ export async function addTransfer(
     if (action === TransferCallback.CONFIRM) {
       confirmed = true
     } else if (action === TransferCallback.CANCEL) {
-      await exitToMenu(flow)
+      await showMenu(flow.ctx.api, flow.chatId, flow.msgId)
 
       return
     } else if (action === TransferCallback.EDIT_DATE) {
@@ -327,9 +320,6 @@ export async function addTransfer(
   await menuCb.answerCallbackQuery()
 
   if (menuCb.callbackQuery.data === MenuCallback.BACK) {
-    await flow.ctx.api.editMessageText(flow.chatId, flow.msgId, MENU_TEXT, {
-      parse_mode: 'HTML',
-      reply_markup: MENU_KEYBOARD,
-    })
+    await showMenu(flow.ctx.api, flow.chatId, flow.msgId)
   }
 }

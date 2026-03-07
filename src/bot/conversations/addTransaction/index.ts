@@ -2,16 +2,16 @@ import { getAccounts } from '@/api/accounts'
 import { getCategories } from '@/api/categories'
 import { getCurrencies } from '@/api/currencies'
 import { getMe } from '@/api/me'
-import { getTopPayees } from '@/api/payees'
+import { getCategoryPayeeMap, getTopPayees } from '@/api/payees'
 import { deleteTransaction } from '@/api/transactions'
 import type { MyContext } from '@/types/context'
-import { previewKeyboard } from '@/bot/keyboards'
-import { MENU_KEYBOARD, MENU_TEXT } from '@/bot/handlers/menu'
+import { backToMenuKeyboard, previewKeyboard } from '@/bot/keyboards'
+import { showMenu } from '@/bot/handlers/menu'
+import { getActiveMsgId, getPendingAmount } from '@/bot/state'
 import { getLastUsed } from '@/bot/userState'
 import { logger } from '@/core/logger'
 import { invalidateCache, CACHE_KEYS } from '@/core/cache'
 import { isoDate } from '@/utils/date'
-import { safeDelete } from '@/utils/telegram'
 import {
   MenuCallback,
   PostSaveCallback,
@@ -25,13 +25,16 @@ import { pickCategory } from './steps/pickCategory'
 import { pickCurrency } from './steps/pickCurrency'
 import { pickDate } from './steps/pickDate'
 import { pickPayee } from './steps/pickPayee'
+import type { AmountResult } from '../shared/pickAmount'
 import { pickAmount } from '../shared/pickAmount'
 import { pickNotes } from './steps/pickNotes'
+import { editAmount } from './steps/editAmount'
 import { saveTransaction } from './steps/saveTransaction'
 
 type StepHandler = (flow: FlowContext, data: FlowData) => Promise<void>
 
 const EDIT_STEPS: Record<string, StepHandler> = {
+  [PreviewCallback.EDIT_AMOUNT]: editAmount,
   [PreviewCallback.EDIT_ACCOUNT]: pickAccount,
   [PreviewCallback.EDIT_CURRENCY]: pickCurrency,
   [PreviewCallback.EDIT_DATE]: pickDate,
@@ -43,32 +46,74 @@ export async function addTransaction(
   conversation: Conv,
   ctx: MyContext
 ): Promise<void> {
-  const [currencies, accounts, categories, payees, me] =
-    await conversation.external(() =>
-      Promise.all([
-        getCurrencies(),
-        getAccounts(),
-        getCategories(),
-        getTopPayees(),
-        getMe(),
-      ])
-    )
-
-  const data: FlowData = { currencies, accounts, categories, payees }
   const chatId = ctx.chat!.id
-  let useLastUsed = true
 
-  const del = (...ids: number[]) =>
-    Promise.all(ids.map(id => safeDelete(ctx.api, chatId, id)))
+  let currencies: string[]
+  let accounts: Awaited<ReturnType<typeof getAccounts>>
+  let categories: Awaited<ReturnType<typeof getCategories>>
+  let payees: string[]
+  let categoryPayeeMap: Awaited<ReturnType<typeof getCategoryPayeeMap>>
+  let me: Awaited<ReturnType<typeof getMe>>
+
+  try {
+    ;[currencies, accounts, categories, payees, categoryPayeeMap, me] =
+      await conversation.external(() =>
+        Promise.all([
+          getCurrencies(),
+          getAccounts(),
+          getCategories(),
+          getTopPayees(),
+          getCategoryPayeeMap(),
+          getMe(),
+        ])
+      )
+  } catch (error) {
+    logger.error('[addTransaction] failed to load data', error)
+    const activeMsgId = await conversation.external(getActiveMsgId)
+
+    if (activeMsgId) {
+      await ctx.api
+        .editMessageText(
+          chatId,
+          activeMsgId,
+          '❌ Failed to load data. Try again.',
+          {
+            reply_markup: backToMenuKeyboard(),
+          }
+        )
+        .catch(() => {})
+    }
+
+    return
+  }
+
+  const data: FlowData = {
+    currencies,
+    accounts,
+    categories,
+    payees,
+    categoryPayeeMap,
+  }
+
+  let prefilledAmount = await conversation.external(getPendingAmount)
 
   while (true) {
-    const amountResult = await pickAmount(conversation, ctx, chatId)
+    let amountResult: AmountResult | null
+
+    if (prefilledAmount) {
+      const activeMsgId = await conversation.external(getActiveMsgId)
+
+      amountResult = { amount: prefilledAmount, msgId: activeMsgId! }
+      prefilledAmount = undefined
+    } else {
+      amountResult = await pickAmount(conversation, ctx, chatId)
+    }
 
     if (amountResult === null) {
       return
     }
 
-    const lastUsed = useLastUsed ? await conversation.external(getLastUsed) : {}
+    const lastUsed = await conversation.external(getLastUsed)
 
     const draft: TransactionDraft = {
       amount: amountResult.amount,
@@ -78,7 +123,7 @@ export async function addTransaction(
       categoryId: lastUsed.categoryId,
       categoryName: lastUsed.categoryName,
       date: isoDate(),
-      payee: undefined,
+      payee: lastUsed.payee,
       notes: undefined,
     }
 
@@ -112,10 +157,7 @@ export async function addTransaction(
       }
 
       if (action === PreviewCallback.CANCEL) {
-        await ctx.api.editMessageText(chatId, flow.msgId, MENU_TEXT, {
-          parse_mode: 'HTML',
-          reply_markup: MENU_KEYBOARD,
-        })
+        await showMenu(ctx.api, chatId, flow.msgId)
 
         return
       }
@@ -158,7 +200,8 @@ export async function addTransaction(
           invalidateCache(
             CACHE_KEYS.RECENT_TRANSACTIONS,
             CACHE_KEYS.CATEGORY_FREQUENCY,
-            CACHE_KEYS.PAYEES
+            CACHE_KEYS.PAYEES,
+            CACHE_KEYS.CATEGORY_PAYEES
           )
 
           return deleteTransaction(createdId)
@@ -174,29 +217,18 @@ export async function addTransaction(
         return
       }
 
-      await del(flow.msgId)
+      await showMenu(ctx.api, chatId, flow.msgId)
 
       return
     }
 
     if (postAction === MenuCallback.BACK) {
-      await ctx.api.editMessageText(chatId, flow.msgId, MENU_TEXT, {
-        parse_mode: 'HTML',
-        reply_markup: MENU_KEYBOARD,
-      })
+      await showMenu(ctx.api, chatId, flow.msgId)
 
       return
     }
 
-    await del(flow.msgId)
-
-    if (postAction === PostSaveCallback.ADD_SIMILAR) {
-      useLastUsed = true
-      continue
-    }
-
     if (postAction === PostSaveCallback.ADD_NEW) {
-      useLastUsed = false
       continue
     }
 

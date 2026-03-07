@@ -5,21 +5,41 @@ import type { InlineKeyboard } from 'grammy'
 
 export const CATEGORY_PAGE_SIZE = 10
 
-export function categoryKeyboard(
-  categories: Category[],
-  page: number,
-  _totalPages: number,
-  recentIds: Set<number>,
+interface CategoryKeyboardOptions {
+  categories: Category[]
+  page: number
+  recentIds: Set<number>
+  selectedId?: number
   filterText?: string
-): InlineKeyboard {
+}
+
+export function categoryKeyboard({
+  categories,
+  page,
+  recentIds,
+  selectedId,
+  filterText,
+}: CategoryKeyboardOptions): InlineKeyboard {
+  const recentCount = categories.filter(c => recentIds.has(c.id)).length
+
   return buildPagedKeyboard({
     items: categories,
     pageSize: CATEGORY_PAGE_SIZE,
     page,
-    renderButton: category => ({
-      label: recentIds.has(category.id) ? `★ ${category.name}` : category.name,
-      callback: `${CategoryCallback.ID_PREFIX}${category.id}`,
-    }),
+    renderButton: (category, globalIndex) => {
+      const isSelected = category.id === selectedId
+      const isRecent = recentIds.has(category.id)
+      const prefix = isSelected ? '✓ ' : isRecent ? '★ ' : ''
+
+      return {
+        label: `${prefix}${category.name}`,
+        callback: `${CategoryCallback.ID_PREFIX}${category.id}`,
+      }
+    },
+    separatorAfterIndex:
+      !filterText && recentCount > 0 && recentCount < categories.length
+        ? recentCount - 1
+        : undefined,
     filterText,
     extraRows: [[{ label: '↩ Back', callback: CommonCallback.BACK }]],
   })

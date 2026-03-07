@@ -2,8 +2,9 @@ import type { FlowContext, FlowData } from '../flowContext'
 import { restorePreview } from '../preview'
 import { backKeyboard, datePicker } from '@/bot/keyboards'
 import { DateCallback } from '@/bot/constants/callbacks'
-import { isoDate } from '@/utils/date'
+import { isoDate, parseFlexibleDate } from '@/utils/date'
 import { wideText } from '@/utils/text'
+import { waitForTextInput } from '../../shared/waitForTextInput'
 
 const QUICK_PICKS: Record<string, number> = {
   [DateCallback.YESTERDAY]: -1,
@@ -11,30 +12,27 @@ const QUICK_PICKS: Record<string, number> = {
   [DateCallback.TOMORROW]: 1,
 }
 
+const MANUAL_PROMPT = '📅 Enter date (e.g. 15, 25.03, 2026-03-07):'
+
 async function pickDateManual(flow: FlowContext): Promise<void> {
   await flow.ctx.api.editMessageText(
     flow.chatId,
     flow.msgId,
-    wideText(
-      `📅 Enter date (YYYY-MM-DD):\nCurrent: <code>${flow.draft.date}</code>`
-    ),
+    wideText(`${MANUAL_PROMPT}\nCurrent: <code>${flow.draft.date}</code>`),
     { parse_mode: 'HTML', reply_markup: backKeyboard() }
   )
 
-  const event = await flow.conversation.wait()
+  const parsed = await waitForTextInput({
+    flow,
+    parse: parseFlexibleDate,
+    errorMessage: wideText(
+      `⚠️ Invalid date. Try again.\n${MANUAL_PROMPT}\nCurrent: <code>${flow.draft.date}</code>`
+    ),
+    errorParseMode: 'HTML',
+  })
 
-  if (event.callbackQuery) {
-    await event.answerCallbackQuery()
-  } else if (event.message?.text) {
-    const text = event.message.text.trim()
-
-    if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
-      flow.draft.date = text
-    } else {
-      await flow.ctx.reply(
-        '⚠️ Invalid format, expected YYYY-MM-DD. Date not changed.'
-      )
-    }
+  if (parsed !== null) {
+    flow.draft.date = parsed
   }
 
   await restorePreview(flow)

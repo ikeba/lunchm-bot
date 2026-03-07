@@ -1,9 +1,10 @@
 import { InlineKeyboard } from 'grammy'
-import type { Bot } from 'grammy'
+import type { Api, Bot } from 'grammy'
 import type { MyContext } from '@/types/context'
 import { handleBalance } from './balance'
 import { handleListTransactions } from './listTransactions'
 import { backgroundRefresh } from '@/core/backgroundRefresh'
+import { setActiveMsgId, setQuickInputEnabled } from '@/bot/state'
 import { version } from '../../../package.json'
 import { wideText } from '@/utils/text'
 
@@ -24,16 +25,24 @@ export const MENU_KEYBOARD = new InlineKeyboard()
   .text('📋 Transactions', Actions.TransactionsList)
   .text('💰 Accounts', Actions.AccountsList)
 
+export function showMenu(api: Api, chatId: number, msgId: number) {
+  return api.editMessageText(chatId, msgId, MENU_TEXT, {
+    parse_mode: 'HTML',
+    reply_markup: MENU_KEYBOARD,
+  })
+}
+
 export function registerMenu(bot: Bot<MyContext>): void {
   bot.command(['menu', 'start', 'help'], async ctx => {
     await ctx.conversation.exit('addTransaction')
     await ctx.conversation.exit('addTransfer')
 
-    await ctx.reply(MENU_TEXT, {
+    const msg = await ctx.reply(MENU_TEXT, {
       parse_mode: 'HTML',
       reply_markup: MENU_KEYBOARD,
     })
 
+    setActiveMsgId(msg.message_id)
     await ctx.deleteMessage().catch(() => {})
     backgroundRefresh()
   })
@@ -43,33 +52,28 @@ export function registerMenuCallbacks(bot: Bot<MyContext>): void {
   bot.callbackQuery(Actions.AddTransaction, async ctx => {
     await ctx.answerCallbackQuery()
     await ctx.conversation.enter('addTransaction')
-
-    await ctx.deleteMessage().catch(() => {})
   })
 
   bot.callbackQuery(Actions.Transfer, async ctx => {
     await ctx.answerCallbackQuery()
     await ctx.conversation.enter('addTransfer')
-
-    await ctx.deleteMessage().catch(() => {})
   })
 
   bot.callbackQuery(Actions.TransactionsList, async ctx => {
     await ctx.answerCallbackQuery()
+    setQuickInputEnabled(false)
     await handleListTransactions(ctx)
-
-    await ctx.deleteMessage().catch(() => {})
   })
 
   bot.callbackQuery(Actions.AccountsList, async ctx => {
     await ctx.answerCallbackQuery()
+    setQuickInputEnabled(false)
     await handleBalance(ctx)
-
-    await ctx.deleteMessage().catch(() => {})
   })
 
   bot.callbackQuery('menu:back', async ctx => {
     await ctx.answerCallbackQuery()
+    setQuickInputEnabled(true)
     await ctx.editMessageText(MENU_TEXT, {
       parse_mode: 'HTML',
       reply_markup: MENU_KEYBOARD,

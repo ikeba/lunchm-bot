@@ -12,7 +12,7 @@ export async function pickAccount(
     flow.chatId,
     flow.msgId,
     wideText('Select account:'),
-    { reply_markup: accountKeyboard(data.accounts) }
+    { reply_markup: accountKeyboard(data.accounts, flow.draft.manualAccountId) }
   )
 
   const cb = await flow.conversation.waitFor('callback_query:data')

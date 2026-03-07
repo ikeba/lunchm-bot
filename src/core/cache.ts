@@ -13,6 +13,7 @@ export const CACHE_KEYS = {
   PAYEES: 'payees',
   ME: 'me',
   ACCOUNTS: 'accounts',
+  CATEGORY_PAYEES: 'category_payees',
   CATEGORY_SPENDING_PREFIX: 'category_spending',
 } as const
 

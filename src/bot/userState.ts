@@ -7,6 +7,7 @@ export interface LastUsed {
   accountName?: string
   categoryId?: number
   categoryName?: string
+  payee?: string
 }
 
 export function getLastUsed(): LastUsed {
@@ -18,6 +19,7 @@ export function getLastUsed(): LastUsed {
     accountName: getPref('last_used.account_name') ?? undefined,
     categoryId: categoryIdRaw ? Number(categoryIdRaw) : undefined,
     categoryName: getPref('last_used.category_name') ?? undefined,
+    payee: getPref('last_used.payee') ?? undefined,
   }
 
   logger.info('[userState] getLastUsed', result)
@@ -30,6 +32,7 @@ const PREF_KEYS = {
   accountName: 'last_used.account_name',
   categoryId: 'last_used.category_id',
   categoryName: 'last_used.category_name',
+  payee: 'last_used.payee',
 } as const satisfies Record<keyof LastUsed, PrefKey>
 
 export function setLastUsed(patch: Partial<LastUsed>): void {

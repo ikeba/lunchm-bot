@@ -1,6 +1,8 @@
 import type { MyContext } from '@/types/context'
 import { backToMenuKeyboard } from '@/bot/keyboards'
-import { MENU_KEYBOARD, MENU_TEXT } from '@/bot/handlers/menu'
+import { showMenu } from '@/bot/handlers/menu'
+import { getActiveMsgId, setActiveMsgId } from '@/bot/state'
+import { parseAmount } from '@/utils/amount'
 import { safeDelete } from '@/utils/telegram'
 import type { Conv } from './types'
 
@@ -25,19 +27,33 @@ export async function pickAmount(
     promptRetry = 'Invalid amount. Try again:',
   } = options
 
-  const promptMsg = await ctx.reply(promptInitial, {
-    reply_markup: backToMenuKeyboard(),
-  })
+  let msgId = await conversation.external(getActiveMsgId)
+
+  if (msgId) {
+    await ctx.api
+      .editMessageText(chatId, msgId, promptInitial, {
+        reply_markup: backToMenuKeyboard(),
+      })
+      .catch(() => {
+        msgId = undefined
+      })
+  }
+
+  if (!msgId) {
+    const msg = await ctx.reply(promptInitial, {
+      reply_markup: backToMenuKeyboard(),
+    })
+
+    msgId = msg.message_id
+    await conversation.external(() => setActiveMsgId(msgId))
+  }
 
   while (true) {
     const event = await conversation.wait()
 
     if (event.callbackQuery) {
       await event.answerCallbackQuery()
-      await ctx.api.editMessageText(chatId, promptMsg.message_id, MENU_TEXT, {
-        parse_mode: 'HTML',
-        reply_markup: MENU_KEYBOARD,
-      })
+      await showMenu(ctx.api, chatId, msgId)
 
       return null
     }
@@ -46,13 +62,13 @@ export async function pickAmount(
       continue
     }
 
-    const raw = event.message.text.trim().replace(',', '.')
-
     await safeDelete(ctx.api, chatId, event.message.message_id)
 
-    if (Number.isNaN(Number.parseFloat(raw))) {
+    const amount = parseAmount(event.message.text)
+
+    if (amount === null) {
       await ctx.api
-        .editMessageText(chatId, promptMsg.message_id, promptRetry, {
+        .editMessageText(chatId, msgId, promptRetry, {
           reply_markup: backToMenuKeyboard(),
         })
         .catch(() => {})
@@ -60,8 +76,8 @@ export async function pickAmount(
     }
 
     return {
-      amount: Number.parseFloat(raw).toFixed(2),
-      msgId: promptMsg.message_id,
+      amount,
+      msgId,
     }
   }
 }

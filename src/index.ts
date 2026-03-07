@@ -6,6 +6,7 @@ import { addTransaction } from './bot/conversations/addTransaction'
 import { addTransfer } from './bot/conversations/transfer'
 import { setupCommands } from './bot/handlers/commands'
 import { registerMenu, registerMenuCallbacks } from './bot/handlers/menu'
+import { registerQuickInput } from './bot/handlers/quickInput'
 import { registerLogsCommand } from './bot/handlers/logs'
 import { authMiddleware, skipOldUpdatesMiddleware } from './bot/middleware'
 import { config } from './config'
@@ -34,6 +35,7 @@ registerLogsCommand(bot)
 bot.use(createConversation(addTransaction))
 bot.use(createConversation(addTransfer))
 registerMenuCallbacks(bot)
+registerQuickInput(bot)
 
 bot.catch(err => {
   logger.error('[bot] Unhandled error', {
