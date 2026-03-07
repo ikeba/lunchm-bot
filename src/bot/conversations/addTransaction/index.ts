@@ -18,29 +18,12 @@ import {
   PreviewCallback,
 } from '@/bot/constants/callbacks'
 import type { Conv } from '../shared/types'
+import { waitForEditAction } from '../shared/editLoop'
 import type { FlowContext, FlowData, TransactionDraft } from './flowContext'
-import { renderPreview, restorePreview } from './preview'
-import { pickAccount } from './steps/pickAccount'
-import { pickCategory } from './steps/pickCategory'
-import { pickCurrency } from './steps/pickCurrency'
-import { pickDate } from './steps/pickDate'
-import { pickPayee } from './steps/pickPayee'
+import { renderPreview } from './preview'
 import type { AmountResult } from '../shared/pickAmount'
 import { pickAmount } from '../shared/pickAmount'
-import { pickNotes } from './steps/pickNotes'
-import { editAmount } from './steps/editAmount'
 import { saveTransaction } from './steps/saveTransaction'
-
-type StepHandler = (flow: FlowContext, data: FlowData) => Promise<void>
-
-const EDIT_STEPS: Record<string, StepHandler> = {
-  [PreviewCallback.EDIT_AMOUNT]: editAmount,
-  [PreviewCallback.EDIT_ACCOUNT]: pickAccount,
-  [PreviewCallback.EDIT_CURRENCY]: pickCurrency,
-  [PreviewCallback.EDIT_DATE]: pickDate,
-  [PreviewCallback.EDIT_PAYEE]: pickPayee,
-  [PreviewCallback.EDIT_NOTE]: pickNotes,
-}
 
 export async function addTransaction(
   conversation: Conv,
@@ -146,10 +129,7 @@ export async function addTransaction(
     let confirmed = false
 
     while (!confirmed) {
-      const cb = await conversation.waitFor('callback_query:data')
-
-      await cb.answerCallbackQuery()
-      const action = cb.callbackQuery.data
+      const action = await waitForEditAction(flow, data)
 
       if (action === PreviewCallback.CONFIRM) {
         confirmed = true
@@ -160,24 +140,6 @@ export async function addTransaction(
         await showMenu(ctx.api, chatId, flow.msgId)
 
         return
-      }
-
-      if (action === PreviewCallback.EDIT_CATEGORY) {
-        const selection = await pickCategory(flow, data)
-
-        if (selection !== null) {
-          draft.categoryId = selection.categoryId
-          draft.categoryName = selection.categoryName
-        }
-
-        await restorePreview(flow)
-        continue
-      }
-
-      const handler = EDIT_STEPS[action]
-
-      if (handler) {
-        await handler(flow, data)
       }
     }
 

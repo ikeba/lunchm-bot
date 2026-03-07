@@ -1,12 +1,19 @@
 import { InlineKeyboard } from 'grammy'
 import type { Api, Bot } from 'grammy'
 import type { MyContext } from '@/types/context'
+import { getRecentTransactions } from '@/api/transactions'
 import { handleBalance } from './balance'
 import { handleListTransactions } from './listTransactions'
 import { backgroundRefresh } from '@/core/backgroundRefresh'
-import { setActiveMsgId, setQuickInputEnabled } from '@/bot/state'
+import {
+  setActiveMsgId,
+  setPendingEditTransaction,
+  setQuickInputEnabled,
+} from '@/bot/state'
+import { TransactionListCallback } from '@/bot/constants/callbacks'
 import { version } from '../../../package.json'
 import { wideText } from '@/utils/text'
+import { logger } from '@/core/logger'
 
 const Actions = {
   AddTransaction: 'menu:add-transaction',
@@ -36,6 +43,7 @@ export function registerMenu(bot: Bot<MyContext>): void {
   bot.command(['menu', 'start', 'help'], async ctx => {
     await ctx.conversation.exit('addTransaction')
     await ctx.conversation.exit('addTransfer')
+    await ctx.conversation.exit('editTransaction')
 
     const msg = await ctx.reply(MENU_TEXT, {
       parse_mode: 'HTML',
@@ -69,6 +77,34 @@ export function registerMenuCallbacks(bot: Bot<MyContext>): void {
     await ctx.answerCallbackQuery()
     setQuickInputEnabled(false)
     await handleBalance(ctx)
+  })
+
+  bot.callbackQuery(/^txn:\d+$/, async ctx => {
+    const transactionId = Number.parseInt(
+      ctx.callbackQuery.data.slice(
+        TransactionListCallback.SELECT_PREFIX.length
+      ),
+      10
+    )
+
+    try {
+      const transactions = await getRecentTransactions()
+      const transaction = transactions.find(t => t.id === transactionId)
+
+      if (!transaction) {
+        await ctx.answerCallbackQuery({ text: 'Transaction not found' })
+
+        return
+      }
+
+      await ctx.answerCallbackQuery()
+      setQuickInputEnabled(false)
+      setPendingEditTransaction(transaction)
+      await ctx.conversation.enter('editTransaction')
+    } catch (error) {
+      await ctx.answerCallbackQuery()
+      logger.error('[menu] txn callback failed', error)
+    }
   })
 
   bot.callbackQuery('menu:back', async ctx => {

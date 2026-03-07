@@ -1,3 +1,4 @@
+import type { InlineKeyboard } from 'grammy'
 import type { Account, Category } from '@/api/types/types'
 import type { CategoryPayeeMap } from '@/api/payees'
 import type { MyContext } from '@/types/context'
@@ -21,6 +22,8 @@ export interface FlowContext {
   chatId: number
   msgId: number
   draft: TransactionDraft
+  title?: string
+  keyboard?: () => InlineKeyboard
 }
 
 export interface FlowData {

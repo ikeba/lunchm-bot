@@ -58,6 +58,17 @@ export const PostSaveCallback = {
   UNDO_PREFIX: 'undo:',
 } as const
 
+export const TransactionListCallback = {
+  SELECT_PREFIX: 'txn:',
+} as const
+
+export const EditPreviewCallback = {
+  SAVE: 'edit:save',
+  DELETE: 'edit:delete',
+  DELETE_CONFIRM: 'edit:delete:y',
+  DELETE_CANCEL: 'edit:delete:n',
+} as const
+
 export const TransferCallback = {
   CONFIRM: 'transfer:confirm',
   CANCEL: 'transfer:cancel',

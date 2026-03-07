@@ -1,13 +1,15 @@
 import { InlineKeyboard } from 'grammy'
-import type { Account } from '@/api/types/types'
+import type { Account, Transaction } from '@/api/types/types'
 import {
   AccountCallback,
   CommonCallback,
   CurrencyCallback,
   DateCallback,
+  EditPreviewCallback,
   MenuCallback,
   PostSaveCallback,
   PreviewCallback,
+  TransactionListCallback,
   TransferCallback,
 } from '@/bot/constants/callbacks'
 
@@ -95,6 +97,55 @@ export function transferPreviewKeyboard(): InlineKeyboard {
     .text('💱 Edit Currency', TransferCallback.EDIT_CURRENCY)
     .row()
     .text('❌ Cancel', TransferCallback.CANCEL)
+}
+
+export function editPreviewKeyboard(): InlineKeyboard {
+  return new InlineKeyboard()
+    .text('💾 Save', EditPreviewCallback.SAVE)
+    .text('🗑 Delete', EditPreviewCallback.DELETE)
+    .row()
+    .text('🏷 Category', PreviewCallback.EDIT_CATEGORY)
+    .text('👤 Payee', PreviewCallback.EDIT_PAYEE)
+    .row()
+    .text('🏦 Account', PreviewCallback.EDIT_ACCOUNT)
+    .text('📅 Date', PreviewCallback.EDIT_DATE)
+    .row()
+    .text('💰 Amount', PreviewCallback.EDIT_AMOUNT)
+    .text('📝 Note', PreviewCallback.EDIT_NOTE)
+    .row()
+    .text('💱 Currency', PreviewCallback.EDIT_CURRENCY)
+    .row()
+    .text('❌ Cancel', PreviewCallback.CANCEL)
+}
+
+export function deleteConfirmKeyboard(): InlineKeyboard {
+  return new InlineKeyboard()
+    .text('Yes, delete', EditPreviewCallback.DELETE_CONFIRM)
+    .text('↩ Back', EditPreviewCallback.DELETE_CANCEL)
+}
+
+export function transactionListKeyboard(
+  transactions: Transaction[]
+): InlineKeyboard {
+  const kb = new InlineKeyboard()
+
+  transactions.forEach((transaction, index) => {
+    kb.text(
+      String(index + 1),
+      `${TransactionListCallback.SELECT_PREFIX}${transaction.id}`
+    )
+    if ((index + 1) % 5 === 0) {
+      kb.row()
+    }
+  })
+
+  if (transactions.length % 5 !== 0) {
+    kb.row()
+  }
+
+  kb.text('← Menu', MenuCallback.BACK)
+
+  return kb
 }
 
 export function accountKeyboard(

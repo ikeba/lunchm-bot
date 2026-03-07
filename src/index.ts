@@ -4,6 +4,7 @@ import process from 'node:process'
 import type { MyContext } from './types/context'
 import { addTransaction } from './bot/conversations/addTransaction'
 import { addTransfer } from './bot/conversations/transfer'
+import { editTransaction } from './bot/conversations/editTransaction'
 import { setupCommands } from './bot/handlers/commands'
 import { registerMenu, registerMenuCallbacks } from './bot/handlers/menu'
 import { registerQuickInput } from './bot/handlers/quickInput'
@@ -34,6 +35,7 @@ registerMenu(bot)
 registerLogsCommand(bot)
 bot.use(createConversation(addTransaction))
 bot.use(createConversation(addTransfer))
+bot.use(createConversation(editTransaction))
 registerMenuCallbacks(bot)
 registerQuickInput(bot)
 
