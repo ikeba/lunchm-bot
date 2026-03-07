@@ -6,13 +6,12 @@ import { getCategoryPayeeMap, getTopPayees } from '@/api/payees'
 import { deleteTransaction } from '@/api/transactions'
 import type { MyContext } from '@/types/context'
 import { backToMenuKeyboard, previewKeyboard } from '@/bot/keyboards'
-import { MENU_KEYBOARD, MENU_TEXT } from '@/bot/handlers/menu'
-import { getActiveMsgId } from '@/bot/state'
+import { showMenu } from '@/bot/handlers/menu'
+import { getActiveMsgId, getPendingAmount } from '@/bot/state'
 import { getLastUsed } from '@/bot/userState'
 import { logger } from '@/core/logger'
 import { invalidateCache, CACHE_KEYS } from '@/core/cache'
 import { isoDate } from '@/utils/date'
-import { getPendingAmount } from '@/bot/handlers/quickInput'
 import {
   MenuCallback,
   PostSaveCallback,
@@ -74,16 +73,27 @@ export async function addTransaction(
 
     if (activeMsgId) {
       await ctx.api
-        .editMessageText(chatId, activeMsgId, '❌ Failed to load data. Try again.', {
-          reply_markup: backToMenuKeyboard(),
-        })
+        .editMessageText(
+          chatId,
+          activeMsgId,
+          '❌ Failed to load data. Try again.',
+          {
+            reply_markup: backToMenuKeyboard(),
+          }
+        )
         .catch(() => {})
     }
 
     return
   }
 
-  const data: FlowData = { currencies, accounts, categories, payees, categoryPayeeMap }
+  const data: FlowData = {
+    currencies,
+    accounts,
+    categories,
+    payees,
+    categoryPayeeMap,
+  }
 
   let prefilledAmount = await conversation.external(getPendingAmount)
 
@@ -147,10 +157,7 @@ export async function addTransaction(
       }
 
       if (action === PreviewCallback.CANCEL) {
-        await ctx.api.editMessageText(chatId, flow.msgId, MENU_TEXT, {
-          parse_mode: 'HTML',
-          reply_markup: MENU_KEYBOARD,
-        })
+        await showMenu(ctx.api, chatId, flow.msgId)
 
         return
       }
@@ -210,19 +217,13 @@ export async function addTransaction(
         return
       }
 
-      await ctx.api.editMessageText(chatId, flow.msgId, MENU_TEXT, {
-        parse_mode: 'HTML',
-        reply_markup: MENU_KEYBOARD,
-      })
+      await showMenu(ctx.api, chatId, flow.msgId)
 
       return
     }
 
     if (postAction === MenuCallback.BACK) {
-      await ctx.api.editMessageText(chatId, flow.msgId, MENU_TEXT, {
-        parse_mode: 'HTML',
-        reply_markup: MENU_KEYBOARD,
-      })
+      await showMenu(ctx.api, chatId, flow.msgId)
 
       return
     }

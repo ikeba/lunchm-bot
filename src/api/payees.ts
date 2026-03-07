@@ -16,17 +16,25 @@ function isUsablePayee(transaction: Transaction): boolean {
   )
 }
 
-function rankPayees(txs: unknown[]): string[] {
-  const counts = new Map<string, number>()
+async function fetchUsableTransactions(): Promise<Transaction[]> {
+  const data = await apiClient.get<TransactionsApiResponse>(
+    buildPath('/transactions', {
+      limit: 500,
+      start_date: isoDate(-90),
+      end_date: isoDate(1),
+    })
+  )
 
-  const filteredTransactions = txs
+  return (data.transactions ?? [])
     .map(transaction => TransactionSchema.parse(transaction))
     .filter(isUsablePayee)
+}
 
-  for (const transaction of filteredTransactions) {
-    if (transaction.payee) {
-      counts.set(transaction.payee, (counts.get(transaction.payee) ?? 0) + 1)
-    }
+function rankPayees(transactions: Transaction[]): string[] {
+  const counts = new Map<string, number>()
+
+  for (const transaction of transactions) {
+    counts.set(transaction.payee!, (counts.get(transaction.payee!) ?? 0) + 1)
   }
 
   return [...counts.entries()]
@@ -37,13 +45,11 @@ function rankPayees(txs: unknown[]): string[] {
 
 export type CategoryPayeeMap = Map<number, string[]>
 
-function buildCategoryPayeeMap(txs: unknown[]): CategoryPayeeMap {
+function buildCategoryPayeeMap(transactions: Transaction[]): CategoryPayeeMap {
   const byCat = new Map<number, Map<string, number>>()
 
-  for (const raw of txs) {
-    const transaction = TransactionSchema.parse(raw)
-
-    if (!isUsablePayee(transaction) || transaction.category_id == null) {
+  for (const transaction of transactions) {
+    if (transaction.category_id == null) {
       continue
     }
 
@@ -69,38 +75,28 @@ function buildCategoryPayeeMap(txs: unknown[]): CategoryPayeeMap {
   return result
 }
 
-async function fetchTransactionData(): Promise<unknown[]> {
-  const data = await apiClient.get<TransactionsApiResponse>(
-    buildPath('/transactions', {
-      limit: 500,
-      start_date: isoDate(-90),
-      end_date: isoDate(1),
-    })
-  )
-
-  return data.transactions ?? []
-}
-
 export function getTopPayees(): Promise<string[]> {
   return withCache(
     CACHE_KEYS.PAYEES,
     async () => {
-      const txs = await fetchTransactionData()
+      const transactions = await fetchUsableTransactions()
 
-      return rankPayees(txs)
+      return rankPayees(transactions)
     },
     { ttl: TTL_1D }
   )
 }
 
-export function getCategoryPayeeMap(): Promise<CategoryPayeeMap> {
-  return withCache(
+export async function getCategoryPayeeMap(): Promise<CategoryPayeeMap> {
+  const entries = await withCache(
     CACHE_KEYS.CATEGORY_PAYEES,
     async () => {
-      const txs = await fetchTransactionData()
+      const transactions = await fetchUsableTransactions()
 
-      return buildCategoryPayeeMap(txs)
+      return [...buildCategoryPayeeMap(transactions).entries()]
     },
     { ttl: TTL_1D }
   )
+
+  return new Map(entries)
 }

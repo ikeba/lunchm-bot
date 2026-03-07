@@ -2,7 +2,7 @@ import type { FlowContext, FlowData } from '../flowContext'
 import { restorePreview } from '../preview'
 import { backKeyboard } from '@/bot/keyboards'
 import { parseAmount } from '@/utils/amount'
-import { safeDelete } from '@/utils/telegram'
+import { waitForTextInput } from '../../shared/waitForTextInput'
 
 export async function editAmount(
   flow: FlowContext,
@@ -15,36 +15,14 @@ export async function editAmount(
     { reply_markup: backKeyboard() }
   )
 
-  while (true) {
-    const event = await flow.conversation.wait()
+  const amount = await waitForTextInput({
+    flow,
+    parse: parseAmount,
+    errorMessage: 'Invalid amount. Try again:',
+  })
 
-    if (event.callbackQuery) {
-      await event.answerCallbackQuery()
-      break
-    }
-
-    if (!event.message?.text) {
-      continue
-    }
-
-    await safeDelete(flow.ctx.api, flow.chatId, event.message.message_id)
-
-    const amount = parseAmount(event.message.text)
-
-    if (amount === null) {
-      await flow.ctx.api
-        .editMessageText(
-          flow.chatId,
-          flow.msgId,
-          'Invalid amount. Try again:',
-          { reply_markup: backKeyboard() }
-        )
-        .catch(() => {})
-      continue
-    }
-
+  if (amount !== null) {
     flow.draft.amount = amount
-    break
   }
 
   await restorePreview(flow)

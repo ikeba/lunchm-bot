@@ -1,11 +1,10 @@
 import { InlineKeyboard } from 'grammy'
-import type { Bot } from 'grammy'
+import type { Api, Bot } from 'grammy'
 import type { MyContext } from '@/types/context'
 import { handleBalance } from './balance'
 import { handleListTransactions } from './listTransactions'
 import { backgroundRefresh } from '@/core/backgroundRefresh'
-import { setActiveMsgId } from '@/bot/state'
-import { setQuickInputEnabled } from './quickInput'
+import { setActiveMsgId, setQuickInputEnabled } from '@/bot/state'
 import { version } from '../../../package.json'
 import { wideText } from '@/utils/text'
 
@@ -25,6 +24,13 @@ export const MENU_KEYBOARD = new InlineKeyboard()
   .row()
   .text('📋 Transactions', Actions.TransactionsList)
   .text('💰 Accounts', Actions.AccountsList)
+
+export function showMenu(api: Api, chatId: number, msgId: number) {
+  return api.editMessageText(chatId, msgId, MENU_TEXT, {
+    parse_mode: 'HTML',
+    reply_markup: MENU_KEYBOARD,
+  })
+}
 
 export function registerMenu(bot: Bot<MyContext>): void {
   bot.command(['menu', 'start', 'help'], async ctx => {

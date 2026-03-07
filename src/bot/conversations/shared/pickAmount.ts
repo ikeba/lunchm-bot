@@ -1,6 +1,6 @@
 import type { MyContext } from '@/types/context'
 import { backToMenuKeyboard } from '@/bot/keyboards'
-import { MENU_KEYBOARD, MENU_TEXT } from '@/bot/handlers/menu'
+import { showMenu } from '@/bot/handlers/menu'
 import { getActiveMsgId, setActiveMsgId } from '@/bot/state'
 import { parseAmount } from '@/utils/amount'
 import { safeDelete } from '@/utils/telegram'
@@ -53,10 +53,7 @@ export async function pickAmount(
 
     if (event.callbackQuery) {
       await event.answerCallbackQuery()
-      await ctx.api.editMessageText(chatId, msgId, MENU_TEXT, {
-        parse_mode: 'HTML',
-        reply_markup: MENU_KEYBOARD,
-      })
+      await showMenu(ctx.api, chatId, msgId)
 
       return null
     }

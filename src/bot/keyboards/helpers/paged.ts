@@ -63,7 +63,7 @@ export function buildPagedKeyboard<T>({
     })
   )
 
-  const itemRows: (typeof itemButtons[number])[] = []
+  const itemRows: (typeof itemButtons)[number][] = []
 
   if (
     separatorAfterIndex != null &&

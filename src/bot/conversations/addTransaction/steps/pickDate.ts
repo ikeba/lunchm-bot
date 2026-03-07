@@ -3,8 +3,8 @@ import { restorePreview } from '../preview'
 import { backKeyboard, datePicker } from '@/bot/keyboards'
 import { DateCallback } from '@/bot/constants/callbacks'
 import { isoDate, parseFlexibleDate } from '@/utils/date'
-import { safeDelete } from '@/utils/telegram'
 import { wideText } from '@/utils/text'
+import { waitForTextInput } from '../../shared/waitForTextInput'
 
 const QUICK_PICKS: Record<string, number> = {
   [DateCallback.YESTERDAY]: -1,
@@ -18,41 +18,21 @@ async function pickDateManual(flow: FlowContext): Promise<void> {
   await flow.ctx.api.editMessageText(
     flow.chatId,
     flow.msgId,
-    wideText(
-      `${MANUAL_PROMPT}\nCurrent: <code>${flow.draft.date}</code>`
-    ),
+    wideText(`${MANUAL_PROMPT}\nCurrent: <code>${flow.draft.date}</code>`),
     { parse_mode: 'HTML', reply_markup: backKeyboard() }
   )
 
-  while (true) {
-    const event = await flow.conversation.wait()
+  const parsed = await waitForTextInput({
+    flow,
+    parse: parseFlexibleDate,
+    errorMessage: wideText(
+      `⚠️ Invalid date. Try again.\n${MANUAL_PROMPT}\nCurrent: <code>${flow.draft.date}</code>`
+    ),
+    errorParseMode: 'HTML',
+  })
 
-    if (event.callbackQuery) {
-      await event.answerCallbackQuery()
-      break
-    }
-
-    if (!event.message?.text) {
-      continue
-    }
-
-    await safeDelete(flow.ctx.api, flow.chatId, event.message.message_id)
-
-    const parsed = parseFlexibleDate(event.message.text)
-
-    if (parsed) {
-      flow.draft.date = parsed
-      break
-    }
-
-    await flow.ctx.api
-      .editMessageText(
-        flow.chatId,
-        flow.msgId,
-        wideText(`⚠️ Invalid date. Try again.\n${MANUAL_PROMPT}\nCurrent: <code>${flow.draft.date}</code>`),
-        { parse_mode: 'HTML', reply_markup: backKeyboard() }
-      )
-      .catch(() => {})
+  if (parsed !== null) {
+    flow.draft.date = parsed
   }
 
   await restorePreview(flow)

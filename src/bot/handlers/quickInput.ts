@@ -2,25 +2,11 @@ import type { Bot } from 'grammy'
 import type { MyContext } from '@/types/context'
 import { parseAmount } from '@/utils/amount'
 import { safeDelete } from '@/utils/telegram'
-
-let pendingAmount: string | undefined
-let enabled = true
-
-export function setQuickInputEnabled(value: boolean): void {
-  enabled = value
-}
-
-export function getPendingAmount(): string | undefined {
-  const amount = pendingAmount
-
-  pendingAmount = undefined
-
-  return amount
-}
+import { setPendingAmount, isQuickInputEnabled } from '@/bot/state'
 
 export function registerQuickInput(bot: Bot<MyContext>): void {
   bot.on('message:text', async ctx => {
-    if (!enabled) {
+    if (!isQuickInputEnabled()) {
       return
     }
 
@@ -40,7 +26,7 @@ export function registerQuickInput(bot: Bot<MyContext>): void {
       return
     }
 
-    pendingAmount = amount
+    setPendingAmount(amount)
     await ctx.deleteMessage().catch(() => {})
     await ctx.conversation.enter('addTransaction')
   })

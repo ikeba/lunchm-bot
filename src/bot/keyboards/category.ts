@@ -1,8 +1,5 @@
 import type { Category } from '@/api/types/types'
-import {
-  CategoryCallback,
-  CommonCallback,
-} from '@/bot/constants/callbacks'
+import { CategoryCallback, CommonCallback } from '@/bot/constants/callbacks'
 import { buildPagedKeyboard } from './helpers/paged'
 import type { InlineKeyboard } from 'grammy'
 
