@@ -1,4 +1,7 @@
-import type { FlowContext, FlowData } from '../flowContext'
+import type {
+  FlowContext,
+  FlowData,
+} from '@/bot/conversations/shared/flowContext'
 import { restorePreview } from '../preview'
 import { safeDelete } from '@/utils/telegram'
 import { payeeKeyboard, PAYEE_PAGE_SIZE } from '@/bot/keyboards/payee'

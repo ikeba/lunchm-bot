@@ -1,10 +1,13 @@
-import type { FlowContext, FlowData } from '../flowContext'
+import type {
+  FlowContext,
+  FlowData,
+} from '@/bot/conversations/shared/flowContext'
 import { restorePreview } from '../preview'
 import { backKeyboard, datePicker } from '@/bot/keyboards'
 import { DateCallback } from '@/bot/constants/callbacks'
 import { isoDate, parseFlexibleDate } from '@/utils/date'
 import { wideText } from '@/utils/text'
-import { waitForTextInput } from '../../shared/waitForTextInput'
+import { waitForTextInput } from '@/bot/conversations/shared/waitForTextInput'
 
 const QUICK_PICKS: Record<string, number> = {
   [DateCallback.YESTERDAY]: -1,

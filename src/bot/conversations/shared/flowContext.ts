@@ -2,7 +2,7 @@ import type { InlineKeyboard } from 'grammy'
 import type { Account, Category } from '@/api/types/types'
 import type { CategoryPayeeMap } from '@/api/payees'
 import type { MyContext } from '@/types/context'
-import type { Conv } from '../shared/types'
+import type { Conv } from './types'
 
 export interface TransactionDraft {
   amount: string

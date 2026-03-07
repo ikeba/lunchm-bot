@@ -1,5 +1,5 @@
 import type { MyContext } from '@/types/context'
-import type { Conv } from '../shared/types'
+import type { Conv } from '@/bot/conversations/shared/types'
 
 export interface TransferDraft {
   amount: string

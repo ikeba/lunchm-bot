@@ -51,6 +51,12 @@ export function backToMenuKeyboard(): InlineKeyboard {
   return new InlineKeyboard().text('← Menu', MenuCallback.BACK)
 }
 
+export function backToListKeyboard(): InlineKeyboard {
+  return new InlineKeyboard()
+    .text('← List', TransactionListCallback.BACK_TO_LIST)
+    .text('← Menu', MenuCallback.BACK)
+}
+
 /** Back button — shown below text prompts (payee, note) */
 export function backKeyboard(): InlineKeyboard {
   return new InlineKeyboard().text('↩ Back', CommonCallback.BACK)
@@ -117,6 +123,10 @@ export function deleteConfirmKeyboard(): InlineKeyboard {
   return new InlineKeyboard()
     .text('Yes, delete', EditPreviewCallback.DELETE_CONFIRM)
     .text('↩ Back', EditPreviewCallback.DELETE_CANCEL)
+}
+
+function truncate(text: string, maxLength: number): string {
+  return text.length <= maxLength ? text : `${text.slice(0, maxLength - 1)}…`
 }
 
 export function transactionListKeyboard(

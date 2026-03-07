@@ -60,6 +60,7 @@ export const PostSaveCallback = {
 
 export const TransactionListCallback = {
   SELECT_PREFIX: 'txn:',
+  BACK_TO_LIST: 'txn:list',
 } as const
 
 export const EditPreviewCallback = {

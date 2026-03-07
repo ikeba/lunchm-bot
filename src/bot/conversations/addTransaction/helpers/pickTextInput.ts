@@ -1,4 +1,7 @@
-import type { FlowContext, TransactionDraft } from '../flowContext'
+import type {
+  FlowContext,
+  TransactionDraft,
+} from '@/bot/conversations/shared/flowContext'
 import { restorePreview } from '../preview'
 import { backKeyboard } from '@/bot/keyboards'
 import { safeDelete } from '@/utils/telegram'

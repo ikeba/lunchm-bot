@@ -1,7 +1,6 @@
 import { InlineKeyboard } from 'grammy'
 import type { Api, Bot } from 'grammy'
 import type { MyContext } from '@/types/context'
-import { getRecentTransactions } from '@/api/transactions'
 import { handleBalance } from './balance'
 import { handleListTransactions } from './listTransactions'
 import { backgroundRefresh } from '@/core/backgroundRefresh'
@@ -13,7 +12,6 @@ import {
 import { TransactionListCallback } from '@/bot/constants/callbacks'
 import { version } from '../../../package.json'
 import { wideText } from '@/utils/text'
-import { logger } from '@/core/logger'
 
 const Actions = {
   AddTransaction: 'menu:add-transaction',
@@ -87,24 +85,16 @@ export function registerMenuCallbacks(bot: Bot<MyContext>): void {
       10
     )
 
-    try {
-      const transactions = await getRecentTransactions()
-      const transaction = transactions.find(t => t.id === transactionId)
+    await ctx.answerCallbackQuery()
+    setQuickInputEnabled(false)
+    await ctx.editMessageText('Loading transaction...').catch(() => {})
+    setPendingEditTransaction(transactionId)
+    await ctx.conversation.enter('editTransaction')
+  })
 
-      if (!transaction) {
-        await ctx.answerCallbackQuery({ text: 'Transaction not found' })
-
-        return
-      }
-
-      await ctx.answerCallbackQuery()
-      setQuickInputEnabled(false)
-      setPendingEditTransaction(transaction)
-      await ctx.conversation.enter('editTransaction')
-    } catch (error) {
-      await ctx.answerCallbackQuery()
-      logger.error('[menu] txn callback failed', error)
-    }
+  bot.callbackQuery(TransactionListCallback.BACK_TO_LIST, async ctx => {
+    await ctx.answerCallbackQuery()
+    await handleListTransactions(ctx)
   })
 
   bot.callbackQuery('menu:back', async ctx => {

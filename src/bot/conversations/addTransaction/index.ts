@@ -13,13 +13,17 @@ import {
   PostSaveCallback,
   PreviewCallback,
 } from '@/bot/constants/callbacks'
-import type { Conv } from '../shared/types'
-import { loadFlowData } from '../shared/loadFlowData'
-import { waitForEditAction } from '../shared/editLoop'
-import type { FlowContext, FlowData, TransactionDraft } from './flowContext'
+import type { Conv } from '@/bot/conversations/shared/types'
+import { loadFlowData } from '@/bot/conversations/shared/loadFlowData'
+import { waitForEditAction } from '@/bot/conversations/shared/editLoop'
+import type {
+  FlowContext,
+  FlowData,
+  TransactionDraft,
+} from '@/bot/conversations/shared/flowContext'
 import { renderPreview } from './preview'
-import type { AmountResult } from '../shared/pickAmount'
-import { pickAmount } from '../shared/pickAmount'
+import type { AmountResult } from '@/bot/conversations/shared/pickAmount'
+import { pickAmount } from '@/bot/conversations/shared/pickAmount'
 import { saveTransaction } from './steps/saveTransaction'
 
 export async function addTransaction(

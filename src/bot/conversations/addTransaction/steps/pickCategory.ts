@@ -1,5 +1,8 @@
 import type { Category } from '@/api/types/types'
-import type { FlowContext, FlowData } from '../flowContext'
+import type {
+  FlowContext,
+  FlowData,
+} from '@/bot/conversations/shared/flowContext'
 import { safeDelete } from '@/utils/telegram'
 import { getCategoryFrequency } from '@/api/transactions'
 import { categoryKeyboard, CATEGORY_PAGE_SIZE } from '@/bot/keyboards/category'

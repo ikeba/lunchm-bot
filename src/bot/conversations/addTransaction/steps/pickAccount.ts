@@ -1,4 +1,7 @@
-import type { FlowContext, FlowData } from '../flowContext'
+import type {
+  FlowContext,
+  FlowData,
+} from '@/bot/conversations/shared/flowContext'
 import { restorePreview } from '../preview'
 import { accountKeyboard } from '@/bot/keyboards'
 import { AccountCallback, CommonCallback } from '@/bot/constants/callbacks'

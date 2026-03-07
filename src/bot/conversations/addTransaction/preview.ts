@@ -1,4 +1,7 @@
-import type { FlowContext, TransactionDraft } from './flowContext'
+import type {
+  FlowContext,
+  TransactionDraft,
+} from '@/bot/conversations/shared/flowContext'
 import { previewKeyboard } from '@/bot/keyboards'
 
 export function renderPreview(

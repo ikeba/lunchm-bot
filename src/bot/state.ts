@@ -1,16 +1,14 @@
-import type { Transaction } from '@/api/types/types'
-
 interface BotState {
   activeMsgId: number | undefined
   pendingAmount: string | undefined
-  pendingEditTransaction: Transaction | undefined
+  pendingEditTransactionId: number | undefined
   quickInputEnabled: boolean
 }
 
 const state: BotState = {
   activeMsgId: undefined,
   pendingAmount: undefined,
-  pendingEditTransaction: undefined,
+  pendingEditTransactionId: undefined,
   quickInputEnabled: true,
 }
 
@@ -34,18 +32,16 @@ export function setPendingAmount(amount: string): void {
   state.pendingAmount = amount
 }
 
-export function consumePendingEditTransaction(): Transaction | undefined {
-  const value = state.pendingEditTransaction
+export function consumePendingEditTransactionId(): number | undefined {
+  const value = state.pendingEditTransactionId
 
-  state.pendingEditTransaction = undefined
+  state.pendingEditTransactionId = undefined
 
   return value
 }
 
-export function setPendingEditTransaction(
-  transaction: Transaction | undefined
-): void {
-  state.pendingEditTransaction = transaction
+export function setPendingEditTransaction(id: number): void {
+  state.pendingEditTransactionId = id
 }
 
 export function isQuickInputEnabled(): boolean {

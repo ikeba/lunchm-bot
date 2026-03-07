@@ -1,4 +1,7 @@
-import type { FlowContext, FlowData } from '../flowContext'
+import type {
+  FlowContext,
+  FlowData,
+} from '@/bot/conversations/shared/flowContext'
 import { pickTextInput } from '../helpers/pickTextInput'
 
 const PROMPT = 'Enter note (or /skip to clear):'

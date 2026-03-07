@@ -1,5 +1,5 @@
 import { PreviewCallback } from '@/bot/constants/callbacks'
-import type { FlowContext, FlowData } from '../addTransaction/flowContext'
+import type { FlowContext, FlowData } from './flowContext'
 import { restorePreview } from '../addTransaction/preview'
 import { pickAccount } from '../addTransaction/steps/pickAccount'
 import { pickCategory } from '../addTransaction/steps/pickCategory'
@@ -8,6 +8,7 @@ import { pickDate } from '../addTransaction/steps/pickDate'
 import { pickPayee } from '../addTransaction/steps/pickPayee'
 import { pickNotes } from '../addTransaction/steps/pickNotes'
 import { editAmount } from '../addTransaction/steps/editAmount'
+import { safeDelete } from '@/utils/telegram'
 
 type StepHandler = (flow: FlowContext, data: FlowData) => Promise<void>
 
@@ -25,10 +26,19 @@ export async function waitForEditAction(
   data: FlowData
 ): Promise<string> {
   while (true) {
-    const cb = await flow.conversation.waitFor('callback_query:data')
+    const event = await flow.conversation.wait()
 
-    await cb.answerCallbackQuery()
-    const action = cb.callbackQuery.data
+    if (event.message) {
+      await safeDelete(flow.ctx.api, flow.chatId, event.message.message_id)
+      continue
+    }
+
+    if (!event.callbackQuery?.data) {
+      continue
+    }
+
+    await event.answerCallbackQuery()
+    const action = event.callbackQuery.data
 
     if (action === PreviewCallback.EDIT_CATEGORY) {
       const selection = await pickCategory(flow, data)
