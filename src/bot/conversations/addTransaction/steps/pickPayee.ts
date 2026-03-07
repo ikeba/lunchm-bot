@@ -57,40 +57,58 @@ function parseAction(
   }
 }
 
+function prioritizeByCategory(
+  allPayees: string[],
+  categoryPayees: string[] | undefined
+): string[] {
+  if (!categoryPayees || categoryPayees.length === 0) {
+    return allPayees
+  }
+
+  const categorySet = new Set(categoryPayees)
+  const rest = allPayees.filter(payee => !categorySet.has(payee))
+
+  return [...categoryPayees, ...rest]
+}
+
 export async function pickPayee(
   flow: FlowContext,
   data: FlowData
 ): Promise<void> {
+  const categoryPayees = flow.draft.categoryId
+    ? data.categoryPayeeMap.get(flow.draft.categoryId)
+    : undefined
+  const sortedPayees = prioritizeByCategory(data.payees, categoryPayees)
+
   let filterText = ''
   let page = 0
 
   function getFiltered(text: string): string[] {
     if (!text) {
-      return data.payees
+      return sortedPayees
     }
 
     const lower = text.toLowerCase()
 
-    return data.payees.filter(payee => payee.toLowerCase().includes(lower))
+    return sortedPayees.filter(payee => payee.toLowerCase().includes(lower))
   }
 
   async function render(filtered: string[], text: string): Promise<void> {
-    const totalPages = Math.ceil(filtered.length / PAYEE_PAGE_SIZE) || 1
     const label = wideText(
       text ? `🔍 "${text}":` : '🔍 Select payee (type to search):'
     )
 
     await flow.ctx.api.editMessageText(flow.chatId, flow.msgId, label, {
-      reply_markup: payeeKeyboard(
-        filtered,
+      reply_markup: payeeKeyboard({
+        payees: filtered,
         page,
-        totalPages,
-        text || undefined
-      ),
+        categoryPayeeCount: !text ? categoryPayees?.length : undefined,
+        filterText: text || undefined,
+      }),
     })
   }
 
-  await render(data.payees, filterText)
+  await render(sortedPayees, filterText)
 
   while (true) {
     const update = await flow.conversation.wait()
@@ -117,12 +135,14 @@ export async function pickPayee(
       case 'navigate':
         page = action.page
         await flow.ctx.api.editMessageReplyMarkup(flow.chatId, flow.msgId, {
-          reply_markup: payeeKeyboard(
-            filtered,
+          reply_markup: payeeKeyboard({
+            payees: filtered,
             page,
-            totalPages,
-            filterText || undefined
-          ),
+            categoryPayeeCount: !filterText
+              ? categoryPayees?.length
+              : undefined,
+            filterText: filterText || undefined,
+          }),
         })
         continue
 

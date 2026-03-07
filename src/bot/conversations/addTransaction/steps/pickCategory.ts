@@ -70,7 +70,7 @@ export async function pickCategory(
     getCategoryFrequency()
   )
   const frequencyMap = toFrequencyMap(frequencyEntries)
-  const recentIds = getRecentIds(frequencyMap, 7)
+  const recentIds = getRecentIds(frequencyMap, 21)
   const sorted = sortByFrequency(data.categories, frequencyMap, recentIds)
   const categoryMap = new Map(sorted.map(category => [category.id, category]))
 
@@ -90,20 +90,18 @@ export async function pickCategory(
   }
 
   async function render(filtered: Category[], text: string): Promise<void> {
-    const totalPages = Math.ceil(filtered.length / CATEGORY_PAGE_SIZE) || 1
-    const filter = text || undefined
     const label = wideText(
       text ? `Select category (🔍 "${text}"):` : 'Select category:'
     )
 
     await flow.ctx.api.editMessageText(flow.chatId, flow.msgId, label, {
-      reply_markup: categoryKeyboard(
-        filtered,
+      reply_markup: categoryKeyboard({
+        categories: filtered,
         page,
-        totalPages,
         recentIds,
-        filter
-      ),
+        selectedId: flow.draft.categoryId,
+        filterText: text || undefined,
+      }),
     })
   }
 
@@ -134,13 +132,13 @@ export async function pickCategory(
       case 'navigate':
         page = action.page
         await flow.ctx.api.editMessageReplyMarkup(flow.chatId, flow.msgId, {
-          reply_markup: categoryKeyboard(
-            filtered,
+          reply_markup: categoryKeyboard({
+            categories: filtered,
             page,
-            totalPages,
             recentIds,
-            filterText || undefined
-          ),
+            selectedId: flow.draft.categoryId,
+            filterText: filterText || undefined,
+          }),
         })
         continue
 

@@ -1,4 +1,5 @@
 import type { Account, Category } from '@/api/types/types'
+import type { CategoryPayeeMap } from '@/api/payees'
 import type { MyContext } from '@/types/context'
 import type { Conv } from '../shared/types'
 
@@ -27,4 +28,5 @@ export interface FlowData {
   accounts: Account[]
   categories: Category[]
   payees: string[]
+  categoryPayeeMap: CategoryPayeeMap
 }

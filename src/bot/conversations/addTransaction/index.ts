@@ -2,7 +2,7 @@ import { getAccounts } from '@/api/accounts'
 import { getCategories } from '@/api/categories'
 import { getCurrencies } from '@/api/currencies'
 import { getMe } from '@/api/me'
-import { getTopPayees } from '@/api/payees'
+import { getCategoryPayeeMap, getTopPayees } from '@/api/payees'
 import { deleteTransaction } from '@/api/transactions'
 import type { MyContext } from '@/types/context'
 import { backToMenuKeyboard, previewKeyboard } from '@/bot/keyboards'
@@ -53,16 +53,18 @@ export async function addTransaction(
   let accounts: Awaited<ReturnType<typeof getAccounts>>
   let categories: Awaited<ReturnType<typeof getCategories>>
   let payees: string[]
+  let categoryPayeeMap: Awaited<ReturnType<typeof getCategoryPayeeMap>>
   let me: Awaited<ReturnType<typeof getMe>>
 
   try {
-    ;[currencies, accounts, categories, payees, me] =
+    ;[currencies, accounts, categories, payees, categoryPayeeMap, me] =
       await conversation.external(() =>
         Promise.all([
           getCurrencies(),
           getAccounts(),
           getCategories(),
           getTopPayees(),
+          getCategoryPayeeMap(),
           getMe(),
         ])
       )
@@ -81,8 +83,7 @@ export async function addTransaction(
     return
   }
 
-  const data: FlowData = { currencies, accounts, categories, payees }
-  let useLastUsed = true
+  const data: FlowData = { currencies, accounts, categories, payees, categoryPayeeMap }
 
   let prefilledAmount = await conversation.external(getPendingAmount)
 
@@ -102,7 +103,7 @@ export async function addTransaction(
       return
     }
 
-    const lastUsed = useLastUsed ? await conversation.external(getLastUsed) : {}
+    const lastUsed = await conversation.external(getLastUsed)
 
     const draft: TransactionDraft = {
       amount: amountResult.amount,
@@ -112,7 +113,7 @@ export async function addTransaction(
       categoryId: lastUsed.categoryId,
       categoryName: lastUsed.categoryName,
       date: isoDate(),
-      payee: undefined,
+      payee: lastUsed.payee,
       notes: undefined,
     }
 
@@ -192,7 +193,8 @@ export async function addTransaction(
           invalidateCache(
             CACHE_KEYS.RECENT_TRANSACTIONS,
             CACHE_KEYS.CATEGORY_FREQUENCY,
-            CACHE_KEYS.PAYEES
+            CACHE_KEYS.PAYEES,
+            CACHE_KEYS.CATEGORY_PAYEES
           )
 
           return deleteTransaction(createdId)
@@ -226,7 +228,6 @@ export async function addTransaction(
     }
 
     if (postAction === PostSaveCallback.ADD_NEW) {
-      useLastUsed = false
       continue
     }
 

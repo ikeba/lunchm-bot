@@ -20,6 +20,7 @@ export type PrefKey =
   | 'last_used.account_name'
   | 'last_used.category_id'
   | 'last_used.category_name'
+  | 'last_used.payee'
 
 export function getPref(key: PrefKey): string | null {
   const row = db

@@ -38,6 +38,7 @@ export async function saveTransaction(
         accountName: draft.accountName,
         categoryId: draft.categoryId,
         categoryName: draft.categoryName,
+        payee: draft.payee,
       })
     )
 
@@ -46,6 +47,7 @@ export async function saveTransaction(
         CACHE_KEYS.RECENT_TRANSACTIONS,
         CACHE_KEYS.CATEGORY_FREQUENCY,
         CACHE_KEYS.PAYEES,
+        CACHE_KEYS.CATEGORY_PAYEES,
         CACHE_KEYS.ACCOUNTS
       )
       backgroundRefresh()

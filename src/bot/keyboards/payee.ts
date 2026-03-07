@@ -4,12 +4,19 @@ import type { InlineKeyboard } from 'grammy'
 
 export const PAYEE_PAGE_SIZE = 10
 
-export function payeeKeyboard(
-  payees: string[],
-  page: number,
-  _totalPages: number,
+interface PayeeKeyboardOptions {
+  payees: string[]
+  page: number
+  categoryPayeeCount?: number
   filterText?: string
-): InlineKeyboard {
+}
+
+export function payeeKeyboard({
+  payees,
+  page,
+  categoryPayeeCount,
+  filterText,
+}: PayeeKeyboardOptions): InlineKeyboard {
   const useTypedRow = filterText
     ? [{ label: `✓ Use "${filterText}"`, callback: PayeeCallback.USE_TYPED }]
     : null
@@ -19,9 +26,21 @@ export function payeeKeyboard(
     pageSize: PAYEE_PAGE_SIZE,
     page,
     renderButton: (payee, globalIndex) => ({
-      label: payee,
+      label:
+        !filterText &&
+        categoryPayeeCount != null &&
+        globalIndex < categoryPayeeCount
+          ? `★ ${payee}`
+          : payee,
       callback: PayeeCallback.SELECT_PREFIX + globalIndex,
     }),
+    separatorAfterIndex:
+      !filterText &&
+      categoryPayeeCount != null &&
+      categoryPayeeCount > 0 &&
+      categoryPayeeCount < payees.length
+        ? categoryPayeeCount - 1
+        : undefined,
     filterText,
     extraRows: [
       ...(useTypedRow ? [useTypedRow] : []),
